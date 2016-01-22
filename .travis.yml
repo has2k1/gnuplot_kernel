@@ -27,4 +27,4 @@ script:
    - nosetests --with-cov --cov-config .coveragerc
 
 after_success:
-   - coveralls --config_file .coveragerc
+   - coveralls --rcfile=.coveragerc

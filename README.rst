@@ -1,5 +1,5 @@
 ####################################
-A Jupyter/IPython kernel for gnuplot
+A Jupyter/IPython kernel for Gnuplot
 ####################################
 
 =================    ===============
@@ -65,5 +65,5 @@ Documentation
 .. |buildstatus| image:: https://api.travis-ci.org/has2k1/gnuplot_kernel.svg?branch=master
 .. _buildstatus: https://travis-ci.org/has2k1/gnuplot_kernel
 
-.. |coverage| image:: https://coveralls.io/repos/has2k1/gnuplot_kernel/badge.svg?branch=master
-.. _coverage: https://coveralls.io/r/has2k1/gnuplot_kernel
+.. |coverage| image:: https://coveralls.io/repos/github/has2k1/gnuplot_kernel/badge.svg?branch=master
+.. _coverage: https://coveralls.io/github/has2k1/gnuplot_kernel?branch=master
