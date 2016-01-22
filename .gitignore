@@ -1,0 +1,18 @@
+*.py[co]
+
+# Packages
+dist/
+build/
+*.egg/
+*.egg-info/
+MANIFEST
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
+.coverage
+.tox
+
+# other
+examples/.ipynb_checkpoints

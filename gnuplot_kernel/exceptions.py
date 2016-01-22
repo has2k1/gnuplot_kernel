@@ -1,0 +1,2 @@
+class GnuplotError(Exception):
+    pass
