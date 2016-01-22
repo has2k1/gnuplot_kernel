@@ -2,6 +2,14 @@
 A Jupyter/IPython kernel for gnuplot
 ####################################
 
+=================    ===============
+Latest Release       |release|_
+License              |license|_
+Build Status         |buildstatus|_
+Coverage             |coverage|_
+=================    ===============
+
+
 `gnuplot_kernel` has been developed for use specifically with
 `Jupyter Notebook`. It can also be loaded as an `IPython`
 extension allowing for `gnuplot` code in the same `notebook`
@@ -47,3 +55,15 @@ Documentation
 .. _`Example Notebooks`: https://github.com/has2k1/gnuplot_kernel/tree/master/examples
 .. _`Metakernel`: https://github.com/Calysto/metakernel
 .. _`Metakernel magics`: https://github.com/Calysto/metakernel/blob/master/metakernel/magics/README.md
+
+.. |release| image:: https://img.shields.io/pypi/v/gnuplot_kernel.svg
+.. _release: https://pypi.python.org/pypi/gnuplot_kernel
+
+.. |license| image:: https://img.shields.io/pypi/l/gnuplot_kernel.svg
+.. _license: https://pypi.python.org/pypi/gnuplot_kernel
+
+.. |buildstatus| image:: https://api.travis-ci.org/has2k1/gnuplot_kernel.svg?branch=master
+.. _buildstatus: https://travis-ci.org/has2k1/gnuplot_kernel
+
+.. |coverage| image:: https://coveralls.io/repos/has2k1/gnuplot_kernel/badge.svg?branch=master
+.. _coverage: https://coveralls.io/r/has2k1/gnuplot_kernel
