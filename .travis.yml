@@ -19,6 +19,7 @@ notifications:
 install:
    - pip install nose-cov
    - pip install coveralls
+   - pip install IPython[notebook]
    - python setup.py install
 
 script:
