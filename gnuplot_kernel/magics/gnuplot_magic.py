@@ -27,10 +27,7 @@ class GnuplotMagic(Magic):
         """
         Print text if it is not empty
         """
-        if text is not None:
-            text = text.strip()
-
-        if text:
+        if text and text.output.strip():
             self.kernel.Display(text)
 
     def line_gnuplot(self, *args):

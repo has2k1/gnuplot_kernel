@@ -6,6 +6,7 @@ import random
 
 from IPython.display import Image, SVG
 from metakernel import MetaKernel, ProcessMetaKernel, pexpect, u
+from metakernel.process_metakernel import TextOutput
 
 from .replwrap import GnuplotREPLWrapper
 from .exceptions import GnuplotError
@@ -101,10 +102,11 @@ class GnuplotKernel(ProcessMetaKernel):
             code = self.add_inline_image_statements(code)
 
         try:
-            output = super(GnuplotKernel, self).do_execute_direct(code)
+            result = super(GnuplotKernel,
+                           self).do_execute_direct(code)
             success = True
         except GnuplotError:
-            output = self.wrapper.current_error
+            result = TextOutput(self.wrapper.current_error)
             success = False
 
         if self.reset_code:
@@ -117,7 +119,9 @@ class GnuplotKernel(ProcessMetaKernel):
             self.delete_image_files()
 
         self.bad_prompt_warning()
-        return output or None  # No empty strings
+
+        # No empty strings
+        return result if result.output else None
 
     def add_inline_image_statements(self, code):
         """
