@@ -2,7 +2,7 @@ import os
 import weakref
 
 from nose.tools import (assert_equal, assert_true, assert_false,
-                        with_setup)
+                        with_setup, assert_raises)
 from metakernel.tests.utils import (get_kernel, get_log_text,
                                     clear_log_text)
 from gnuplot_kernel import GnuplotKernel
@@ -45,6 +45,8 @@ def teardown():
 
         kernel.do_shutdown(restart=False)
 
+
+# Normal workflow tests #
 
 def test_inline_magic():
     kernel = get_kernel(GnuplotKernel)
@@ -113,6 +115,17 @@ def test_inline_plots():
     kernel.do_execute(code)
     text = get_log_text(kernel)
     assert_true(text.count('Display Data') == 2)
+    clear_log_text(kernel)
+
+    # svg
+    kernel.call_magic('%gnuplot inline svg')
+    code = """
+    plot tan(x)
+    """
+    kernel.do_execute(code)
+    text = get_log_text(kernel)
+    assert_true('Display Data' in text)
+    clear_log_text(kernel)
 
 
 def test_plot_abbreviations():
@@ -230,7 +243,7 @@ def test_cell_magic():
     """
     kernel.do_execute(code)
     assert_true(os.path.exists('cosine.png'))
-
+    clear_log_text(kernel)
 
 @with_setup(teardown=remove_files('sine+cosine.png'))
 def test_reset_cell_magic():
@@ -269,3 +282,30 @@ def test_reset_line_magic():
     """
     kernel.do_execute(code)
     assert_false(os.path.exists('sine+sine.png'))
+
+    # Bad inline backend
+    # metakernel messes this exception!!
+    # with assert_raises(ValueError):
+    #     kernel.call_magic('%gnuplot inline qt')
+
+
+# utils tests #
+
+def test_remove_files():
+    filename = './antigravity.txt'
+    func = remove_files(filename)
+
+    # Create file
+    # Verify it exists
+    # Remove it
+    # Verify it does not exist
+    # Remove it again, nothing happens
+
+    with open(filename, 'w'):
+        pass
+
+    assert_true(os.path.exists(filename))
+    func()
+
+    assert_false(os.path.exists(filename))
+    func()
