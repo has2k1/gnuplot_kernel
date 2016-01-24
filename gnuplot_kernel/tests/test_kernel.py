@@ -188,6 +188,18 @@ def test_gnuplot_error_message():
     assert_true(' ^' in text)
 
 
+def test_bad_prompt():
+    kernel = get_kernel(GnuplotKernel)
+    # Anything other than 'gnuplot> '
+    # is a bad prompt
+    code = 'set multiplot'
+    kernel.do_execute(code)
+    text = get_log_text(kernel)
+    assert_true('warning' in text.lower())
+
+
+# magics #
+
 @with_setup(teardown=remove_files('cosine.png'))
 def test_cell_magic():
     # To simulate '%load_ext gnuplot_kernel';

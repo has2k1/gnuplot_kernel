@@ -8,31 +8,24 @@ from .exceptions import GnuplotError
 
 CRLF = '\r\n'
 ERROR_REs = [re.compile(r'^\s*\^\s*\n')]
-BAD_OUTPUT_REs = [re.compile(r'Closing /tmp/gnuplot-inline')]
 
 
 class GnuplotREPLWrapper(REPLWrapper):
+    # The prompt after the commands run
     prompt = ''
-    current_error = ''
 
     def exit(self):
         """
         Exit the gnuplot process
         """
-        # If nothing is terribly wrong a couple
-        # of crlfs should ensure we are at the
-        # prompt
-        self.sendline(CRLF)
-        self.sendline(CRLF)
-
         try:
-            self._expect_prompt(timeout=.1)
-        except TIMEOUT:
+            self._force_prompt(timeout=.01)
+        except GnuplotError:
             return self.child.kill(signal.SIGKILL)
 
         self.sendline('exit')
 
-    def is_error(self, text):
+    def is_error_output(self, text):
         """
         Return True if text is recognised as error text
         """
@@ -41,27 +34,61 @@ class GnuplotREPLWrapper(REPLWrapper):
                 return True
         return False
 
-    def filter_output(self, text):
-        """
-        Sink hole for unwanted output
-        """
-        for pattern in BAD_OUTPUT_REs:
-            if pattern.match(text):
-                return ''
-        return text
-
     def validate_input(self, code):
         """
         Deal with problematic input
+
+        Raises GnuplotError if it cannot deal with it.
         """
         if code.endswith('\\'):
-            self.current_error = ("Do not execute code that "
-                                  "endswith backslash.")
-            raise GnuplotError()
+            raise GnuplotError("Do not execute code that "
+                               "endswith backslash.")
 
         # Do not get stuck in the gnuplot process
         code = code.replace('\\\n', ' ')
         return code
+
+    def send(self, cmd):
+        self.child.send(cmd + '\r')
+
+    def _force_prompt(self, timeout=30, n=4):
+        """
+        Force prompt
+        """
+        quick_timeout = .05
+
+        if timeout < quick_timeout:
+            quick_timeout = timeout
+
+        def quick_prompt():
+            try:
+                self._expect_prompt(timeout=quick_timeout)
+                return True
+            except TIMEOUT:
+                return False
+
+        def patient_prompt():
+            try:
+                self._expect_prompt(timeout=timeout)
+                return True
+            except TIMEOUT:
+                return False
+
+        # Eagerly try to get a prompt quickly,
+        # If that fails wait a while
+        for i in range(n):
+            if quick_prompt():
+                break
+
+            # Probably stuck in help output
+            if self.child.before:
+                self.send(self.child.linesep)
+        else:
+            # Probably long computation going on
+            if not patient_prompt():
+                msg = ("gnuplot prompt failed to return in "
+                       "in {} seconds").format(timeout)
+                raise GnuplotError(msg)
 
     def run_command(self, code, timeout=-1, stream_handler=None):
         """
@@ -70,23 +97,24 @@ class GnuplotREPLWrapper(REPLWrapper):
         This overrides the baseclass method to allow for
         input validation and error handling that is.
         """
-        self.current_error = ''
         code = self.validate_input(code)
+
         # Split up multiline commands and feed them in bit-by-bit
         stmts = code.splitlines()
-        output = ''
+        output = []
         for line in stmts:
-            self.sendline(line)
-            self._expect_prompt()
+            self.send(line)
+            self._force_prompt()
+
             # Removing any crlfs makes subsequent
             # processing cleaner
             retval = self.child.before.replace(CRLF, '\n')
-            retval = self.filter_output(retval)
             self.prompt = self.child.after
-            if self.is_error(retval):
-                s = textwrap.dedent(retval)
-                self.current_error = '{}\n{}'.format(line, s)
-                raise GnuplotError()
-            output += retval
+            if self.is_error_output(retval):
+                msg = '{}\n{}'.format(
+                    line, textwrap.dedent(retval))
+                raise GnuplotError(msg)
 
-        return output
+            output.append(retval)
+
+        return ''.join(output)

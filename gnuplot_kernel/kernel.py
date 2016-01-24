@@ -101,12 +101,13 @@ class GnuplotKernel(ProcessMetaKernel):
         if self.inline_plotting:
             code = self.add_inline_image_statements(code)
 
+        success = True
+
         try:
             result = super(GnuplotKernel,
                            self).do_execute_direct(code)
-            success = True
-        except GnuplotError:
-            result = TextOutput(self.wrapper.current_error)
+        except GnuplotError as e:
+            result = TextOutput(e.message)
             success = False
 
         if self.reset_code:

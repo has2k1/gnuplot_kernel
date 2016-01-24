@@ -1,2 +1,5 @@
 class GnuplotError(Exception):
-    pass
+
+    def __init__(self, message):
+        self.args = (message,)
+        self.message = message
