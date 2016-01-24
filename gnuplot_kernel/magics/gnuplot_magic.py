@@ -78,11 +78,8 @@ class GnuplotMagic(Magic):
         The working directory is synchronized to that of the notebook
         before and after each call.
         """
-        self.eval(self.code)
-
-    def get_help_on(self, info, level=0):
-        expr = info['code'].rstrip()
-        return self.eval('help {}'.format(expr))
+        result = self.eval(self.code)
+        self.print(result)
 
 
 def register_magics(kernel):

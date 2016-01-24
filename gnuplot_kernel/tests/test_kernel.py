@@ -147,6 +147,27 @@ def test_multiplot():
     assert_true(text.count('Display Data') == 1)
 
 
+def test_help():
+    kernel = get_kernel(GnuplotKernel)
+
+    # The help commands should not get
+    # stuck in pagers.
+
+    # Fancy notebook help
+    code = 'terminal?'
+    kernel.do_execute(code)
+    text = get_log_text(kernel).lower()
+    assert_true('subtopic' in text)
+    clear_log_text(kernel)
+
+    # help by gnuplot statement
+    code = 'help print'
+    kernel.do_execute(code)
+    text = get_log_text(kernel).lower()
+    assert_true('syntax' in text)
+    clear_log_text(kernel)
+
+
 def test_badinput():
     kernel = get_kernel(GnuplotKernel)
 

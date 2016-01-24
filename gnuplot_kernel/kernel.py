@@ -232,7 +232,7 @@ class GnuplotKernel(ProcessMetaKernel):
         # use a non interactive PAGER
         command = 'env PAGER=cat gnuplot'
         d = dict(cmd_or_spawn=command,
-                 prompt_regex=u('\w*> '),
+                 prompt_regex=u('\w*> $'),
                  prompt_change_cmd=None)
         wrapper = GnuplotREPLWrapper(**d)
         # No sleeping before sending commands to gnuplot
@@ -253,8 +253,10 @@ class GnuplotKernel(ProcessMetaKernel):
                 return None
             else:
                 return ''
-        resp = self.do_execute_direct('help %s' % obj)
-        return resp
+        res = self.do_execute_direct('help %s' % obj)
+        text = res.output.strip().rstrip('gnuplot>')
+        self.bad_prompt_warning()
+        return text
 
     def handle_plot_settings(self):
         """
