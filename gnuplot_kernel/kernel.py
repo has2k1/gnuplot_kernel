@@ -13,7 +13,7 @@ from .exceptions import GnuplotError
 
 # This is the only place that the version is
 # specified
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
 try:
     FileNotFoundError
@@ -50,7 +50,6 @@ class GnuplotKernel(ProcessMetaKernel):
 
     inline_plotting = True
     reset_code = ''
-    success = True
     _first = True
     _image_files = []
     _error = False

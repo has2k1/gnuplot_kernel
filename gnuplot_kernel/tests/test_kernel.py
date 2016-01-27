@@ -2,7 +2,7 @@ import os
 import weakref
 
 from nose.tools import (assert_equal, assert_true, assert_false,
-                        with_setup, assert_raises)
+                        with_setup)
 from metakernel.tests.utils import (get_kernel, get_log_text,
                                     clear_log_text)
 from gnuplot_kernel import GnuplotKernel
@@ -244,6 +244,7 @@ def test_cell_magic():
     kernel.do_execute(code)
     assert_true(os.path.exists('cosine.png'))
     clear_log_text(kernel)
+
 
 @with_setup(teardown=remove_files('sine+cosine.png'))
 def test_reset_cell_magic():
