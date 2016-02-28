@@ -4,8 +4,13 @@ import json
 import pkgutil
 
 from distutils import log
-from setuptools.command.install import install
+from distutils.command.install import install
 from setuptools import setup
+try:
+    from jupyter_client.kernelspec import install_kernel_spec
+except ImportError:
+    from IPython.kernel.kernelspec import install_kernel_spec
+from IPython.utils.tempdir import TemporaryDirectory
 
 
 kernel_json = {
@@ -40,8 +45,6 @@ def install_kernel_resources(destination,
 class install_with_kernelspec(install):
     def run(self):
         install.run(self)
-        from IPython.kernel.kernelspec import install_kernel_spec
-        from IPython.utils.tempdir import TemporaryDirectory
         with TemporaryDirectory() as td:
             os.chmod(td, 0o755)  # Starts off as 700, not user readable
             with open(os.path.join(td, 'kernel.json'), 'w') as f:
