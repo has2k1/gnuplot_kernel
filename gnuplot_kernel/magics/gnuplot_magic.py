@@ -108,7 +108,9 @@ def register_ipython_magics():
     # not the main kernel and it may not have access
     # to some functionality. This connects it to the
     # main kernel.
-    kernel.makeSubkernelToIPython()
+    from IPython import get_ipython
+    ip = get_ipython()
+    kernel.makeSubkernel(ip.parent)
 
     # Make magics callable:
     kernel.line_magics['gnuplot'] = magic
