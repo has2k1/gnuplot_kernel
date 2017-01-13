@@ -90,7 +90,7 @@ class GnuplotREPLWrapper(REPLWrapper):
                        "in {} seconds").format(timeout)
                 raise GnuplotError(msg)
 
-    def run_command(self, code, timeout=-1, stream_handler=None):
+    def run_command(self, code, timeout=-1, stream_handler=None, stdin_handler=None):
         """
         Run code
 
