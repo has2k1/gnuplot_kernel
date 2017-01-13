@@ -121,7 +121,7 @@ class GnuplotKernel(ProcessMetaKernel):
         self.bad_prompt_warning()
 
         # No empty strings
-        return result if result.output else None
+        return result if (result and result.output) else None
 
     def add_inline_image_statements(self, code):
         """
