@@ -223,7 +223,7 @@ def test_cell_magic():
     kernel = get_kernel()
     gkernel = GnuplotKernel()
     gmagic = GnuplotMagic(gkernel)
-    gkernel.makeSubkernelTo(kernel, kernel.Display)
+    gkernel.makeSubkernel(kernel)
     kernel.line_magics['gnuplot'] = gmagic
     kernel.cell_magics['gnuplot'] = gmagic
 
