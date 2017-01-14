@@ -13,6 +13,7 @@ pip-log.txt
 # Unit test / coverage reports
 .coverage
 .tox
+htmlcov/
 
 # other
 examples/.ipynb_checkpoints

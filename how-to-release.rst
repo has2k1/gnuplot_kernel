@@ -8,7 +8,7 @@ Testing
 * `cd` to the root of project and run
   ::
 
-    nosetests
+    make test
 
 * Once all the tests pass move on
 
@@ -22,7 +22,7 @@ Tagging
 * Tag with the version number e.g
   ::
 
-    git tag v0.1.0
+    git tag -a v0.1.0 -m 'Version 0.1.0'
 
   Note the `v` before the version number.
 
@@ -41,21 +41,17 @@ Packaging
 
     cat ~/.pypirc
 
-* Clean up
-  ::
-
-    rm -rf build dist
 
 * Build distribution
   ::
 
-    python setup.py sdist bdist_wheel
+    make dist
 
 * (optional) Upload to PyPi test repository
   and then try install and test
   ::
 
-     twine upload -r pypitest dist/*
+     make release-test
 
      mkvirtualenv test-gnuplot-kernel
 
@@ -77,6 +73,6 @@ Packaging
 * Upload to PyPi
   ::
 
-    twine upload dist/*
+    make release
 
 * Done.
