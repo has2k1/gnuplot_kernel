@@ -13,7 +13,7 @@ from .exceptions import GnuplotError
 
 # This is the only place that the version is
 # specified
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 
 try:
     FileNotFoundError
