@@ -104,14 +104,14 @@ class GnuplotKernel(ProcessMetaKernel):
 
         try:
             result = super(GnuplotKernel,
-                           self).do_execute_direct(code)
+                           self).do_execute_direct(code, silent=True)
         except GnuplotError as e:
             result = TextOutput(e.message)
             success = False
 
         if self.reset_code:
             super(GnuplotKernel, self).do_execute_direct(
-                self.reset_code)
+                self.reset_code, silent=True)
 
         if self.inline_plotting:
             if success:

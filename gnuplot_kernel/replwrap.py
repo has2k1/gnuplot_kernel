@@ -90,12 +90,13 @@ class GnuplotREPLWrapper(REPLWrapper):
                        "in {} seconds").format(timeout)
                 raise GnuplotError(msg)
 
-    def run_command(self, code, timeout=-1, stream_handler=None, stdin_handler=None):
+    def run_command(self, code, timeout=-1, stream_handler=None,
+                    stdin_handler=None):
         """
         Run code
 
         This overrides the baseclass method to allow for
-        input validation and error handling that is.
+        input validation and error handling.
         """
         code = self.validate_input(code)
 
