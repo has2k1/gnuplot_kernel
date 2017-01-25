@@ -1,0 +1,14 @@
+# example notebooks
+matplotlib
+
+# Testing
+pytest-cov
+coveralls
+
+# Release
+wheel
+twine
+
+# Linting
+pep8
+flake8

@@ -16,4 +16,5 @@ pip-log.txt
 htmlcov/
 
 # other
+.cache
 examples/.ipynb_checkpoints
