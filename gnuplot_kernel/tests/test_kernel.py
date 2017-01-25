@@ -64,7 +64,6 @@ def test_print():
     assert '1.0' in text
 
 
-@remove_files('sine.png', 'sine-cosine.png')
 def test_file_plots():
     kernel = get_kernel(GnuplotKernel)
     kernel.call_magic('%gnuplot pngcairo size 560, 420')
@@ -86,6 +85,8 @@ def test_file_plots():
     """
     kernel.do_execute(code)
     assert os.path.exists('sine-cosine.png')
+
+    remove_files('sine.png', 'sine-cosine.png')
 
 
 def test_inline_plots():
@@ -207,7 +208,6 @@ def test_bad_prompt():
 
 # magics #
 
-@remove_files('cosine.png')
 def test_cell_magic():
     # To simulate '%load_ext gnuplot_kernel';
     # create a main kernel, a gnuplot kernel and
@@ -239,8 +239,9 @@ def test_cell_magic():
     assert os.path.exists('cosine.png')
     clear_log_text(kernel)
 
+    remove_files('cosine.png')
 
-@remove_files('sine+cosine.png')
+
 def test_reset_cell_magic():
     kernel = get_kernel(GnuplotKernel)
 
@@ -257,6 +258,8 @@ def test_reset_cell_magic():
     """
     kernel.do_execute(code)
     assert os.path.exists('sine+cosine.png')
+
+    remove_files('sine+cosine.png')
 
 
 def test_reset_line_magic():
@@ -285,24 +288,19 @@ def test_reset_line_magic():
 
 
 # fixture tests #
-temp_file = 'antigravity.txt'
-
-
-@remove_files(temp_file)
-def test_create_file():
+def test_remove_files():
     """
     This test create a file. Next test tests that it
     is deleted
     """
+    filename = 'antigravit.txt'
     # Create file
-    with open(temp_file, 'w'):
+    # make sure it exis
+    with open(filename, 'w'):
         pass
 
-    assert os.path.exists(temp_file)
+    assert os.path.exists(filename)
 
+    remove_files(filename)
 
-def test_remove_files():
-    """
-    Check that file created in previous test is gone
-    """
-    assert not os.path.exists(temp_file)
+    assert not os.path.exists(filename)
