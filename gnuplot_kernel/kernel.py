@@ -277,4 +277,4 @@ class GnuplotKernel(ProcessMetaKernel):
         self.inline_plotting = settings['backend'] == 'inline'
 
         cmd = 'set terminal {}'.format(settings['termspec'])
-        super(GnuplotKernel, self).do_execute_direct(cmd)
+        self.do_execute_direct(cmd)
