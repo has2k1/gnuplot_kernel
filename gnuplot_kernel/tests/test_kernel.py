@@ -1,14 +1,12 @@
 import os
 import weakref
 
-from nose.tools import (assert_equal, assert_true, assert_false,
-                        with_setup)
 from metakernel.tests.utils import (get_kernel, get_log_text,
                                     clear_log_text)
 from gnuplot_kernel import GnuplotKernel
 from gnuplot_kernel.magics import GnuplotMagic
 
-from .utils import remove_files
+from .conftest import remove_files
 
 # Note: Empty lines after indented triple quoted may
 # lead to empty statements which could obscure the
@@ -53,12 +51,9 @@ def test_inline_magic():
 
     # gnuplot line magic changes the plot settings
     kernel.call_magic('%gnuplot pngcairo size 560, 420')
-    assert_equal(kernel.plot_settings['backend'],
-                 'pngcairo')
-    assert_equal(kernel.plot_settings['format'],
-                 'png')
-    assert_equal(kernel.plot_settings['termspec'],
-                 'pngcairo size 560, 420')
+    assert kernel.plot_settings['backend'] == 'pngcairo'
+    assert kernel.plot_settings['format'] == 'png'
+    assert kernel.plot_settings['termspec'] == 'pngcairo size 560, 420'
 
 
 def test_print():
@@ -66,11 +61,10 @@ def test_print():
     code = "print cos(0)"
     kernel.do_execute(code)
     text = get_log_text(kernel)
-    assert_true('1.0' in text)
+    assert '1.0' in text
 
 
-@with_setup(teardown=remove_files(('sine.png',
-                                   'sine-cosine.png')))
+@remove_files('sine.png', 'sine-cosine.png')
 def test_file_plots():
     kernel = get_kernel(GnuplotKernel)
     kernel.call_magic('%gnuplot pngcairo size 560, 420')
@@ -81,7 +75,7 @@ def test_file_plots():
     plot sin(x)
     """
     kernel.do_execute(code)
-    assert_true(os.path.exists('sine.png'))
+    assert os.path.exists('sine.png')
     clear_log_text(kernel)
 
     # Multiple line statement
@@ -91,7 +85,7 @@ def test_file_plots():
          cos(x)
     """
     kernel.do_execute(code)
-    assert_true(os.path.exists('sine-cosine.png'))
+    assert os.path.exists('sine-cosine.png')
 
 
 def test_inline_plots():
@@ -104,7 +98,7 @@ def test_inline_plots():
     """
     kernel.do_execute(code)
     text = get_log_text(kernel)
-    assert_true('Display Data' in text)
+    assert 'Display Data' in text
     clear_log_text(kernel)
 
     # multiple plot statements data
@@ -114,7 +108,7 @@ def test_inline_plots():
     """
     kernel.do_execute(code)
     text = get_log_text(kernel)
-    assert_true(text.count('Display Data') == 2)
+    assert text.count('Display Data') == 2
     clear_log_text(kernel)
 
     # svg
@@ -124,7 +118,7 @@ def test_inline_plots():
     """
     kernel.do_execute(code)
     text = get_log_text(kernel)
-    assert_true('Display Data' in text)
+    assert 'Display Data' in text
     clear_log_text(kernel)
 
 
@@ -142,7 +136,7 @@ def test_plot_abbreviations():
     """
     kernel.do_execute(code)
     text = get_log_text(kernel)
-    assert_true(text.count('Display Data') == 4)
+    assert text.count('Display Data') == 4
 
 
 def test_multiplot():
@@ -157,7 +151,7 @@ def test_multiplot():
     """
     kernel.do_execute(code)
     text = get_log_text(kernel)
-    assert_true(text.count('Display Data') == 1)
+    assert text.count('Display Data') == 1
 
 
 def test_help():
@@ -170,14 +164,14 @@ def test_help():
     code = 'terminal?'
     kernel.do_execute(code)
     text = get_log_text(kernel).lower()
-    assert_true('subtopic' in text)
+    assert 'subtopic' in text
     clear_log_text(kernel)
 
     # help by gnuplot statement
     code = 'help print'
     kernel.do_execute(code)
     text = get_log_text(kernel).lower()
-    assert_true('syntax' in text)
+    assert 'syntax' in text
     clear_log_text(kernel)
 
 
@@ -188,7 +182,7 @@ def test_badinput():
     code = 'plot sin(x),\\'
     kernel.do_execute(code)
     text = get_log_text(kernel)
-    assert_true('backslash' in text)
+    assert 'backslash' in text
 
 
 def test_gnuplot_error_message():
@@ -198,7 +192,7 @@ def test_gnuplot_error_message():
     code = 'plot [1,2][] sin(x)'
     kernel.do_execute(code)
     text = get_log_text(kernel)
-    assert_true(' ^' in text)
+    assert ' ^' in text
 
 
 def test_bad_prompt():
@@ -208,12 +202,12 @@ def test_bad_prompt():
     code = 'set multiplot'
     kernel.do_execute(code)
     text = get_log_text(kernel)
-    assert_true('warning' in text.lower())
+    assert 'warning' in text.lower()
 
 
 # magics #
 
-@with_setup(teardown=remove_files('cosine.png'))
+@remove_files('cosine.png')
 def test_cell_magic():
     # To simulate '%load_ext gnuplot_kernel';
     # create a main kernel, a gnuplot kernel and
@@ -232,7 +226,7 @@ def test_cell_magic():
     plot cos(x)
     """
     kernel.do_execute(code)
-    assert_true('Display Data' in get_log_text(kernel))
+    assert 'Display Data' in get_log_text(kernel)
     clear_log_text(kernel)
 
     # file output
@@ -242,11 +236,11 @@ def test_cell_magic():
     plot cos(x)
     """
     kernel.do_execute(code)
-    assert_true(os.path.exists('cosine.png'))
+    assert os.path.exists('cosine.png')
     clear_log_text(kernel)
 
 
-@with_setup(teardown=remove_files('sine+cosine.png'))
+@remove_files('sine+cosine.png')
 def test_reset_cell_magic():
     kernel = get_kernel(GnuplotKernel)
 
@@ -256,13 +250,13 @@ def test_reset_cell_magic():
     plot sin(x) + cos(x)
     """
     kernel.call_magic(code)
-    assert_false(os.path.exists('sine+cosine.png'))
+    assert not os.path.exists('sine+cosine.png')
 
     code = """
     unset key
     """
     kernel.do_execute(code)
-    assert_true(os.path.exists('sine+cosine.png'))
+    assert os.path.exists('sine+cosine.png')
 
 
 def test_reset_line_magic():
@@ -282,7 +276,7 @@ def test_reset_line_magic():
     unset key
     """
     kernel.do_execute(code)
-    assert_false(os.path.exists('sine+sine.png'))
+    assert not os.path.exists('sine+sine.png')
 
     # Bad inline backend
     # metakernel messes this exception!!
@@ -290,23 +284,25 @@ def test_reset_line_magic():
     #     kernel.call_magic('%gnuplot inline qt')
 
 
-# utils tests #
+# fixture tests #
+temp_file = 'antigravity.txt'
 
-def test_remove_files():
-    filename = './antigravity.txt'
-    func = remove_files(filename)
 
+@remove_files(temp_file)
+def test_create_file():
+    """
+    This test create a file. Next test tests that it
+    is deleted
+    """
     # Create file
-    # Verify it exists
-    # Remove it
-    # Verify it does not exist
-    # Remove it again, nothing happens
-
-    with open(filename, 'w'):
+    with open(temp_file, 'w'):
         pass
 
-    assert_true(os.path.exists(filename))
-    func()
+    assert os.path.exists(temp_file)
 
-    assert_false(os.path.exists(filename))
-    func()
+
+def test_remove_files():
+    """
+    Check that file created in previous test is gone
+    """
+    assert not os.path.exists(temp_file)

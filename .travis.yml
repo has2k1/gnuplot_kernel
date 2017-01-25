@@ -17,11 +17,12 @@ notifications:
   email: false
 
 install:
-   - pip install nose-cov
+   - pip install ipykernel metakernel
+   - pip install --upgrade pytest>=3.0.6
+   - pip install pytest-cov
    - pip install coveralls
-   - pip install IPython[notebook]
-   - pip install metakernel
    - python setup.py install
+   - pip list
 
 script:
    - make test

@@ -33,10 +33,10 @@ clean-test:
 	rm -fr htmlcov/
 
 lint:
-	flake8 gnuplot-kernel
+	flake8 gnuplot_kernel
 
 test: clean-test
-	nosetests --with-cov --cov-config .coveragerc
+	pytest --cov=gnuplot_kernel
 
 coverage:
 	coverage report -m

@@ -1,4 +1,5 @@
 import os
+import pytest
 
 try:
     FileNotFoundError
@@ -7,17 +8,16 @@ except NameError:
     FileNotFoundError = OSError
 
 
-def remove_files(filenames):
+def remove_files(*filenames):
     """
-    Return a function at remove files
-
-    This is meant to be used as a teardown
-    function.
+    Return a fixture that removes the files created
+    during the test
     """
-    if not isinstance(filenames, (tuple, list)):
-        filenames = (filenames,)
 
-    def _remove_files():
+    @pytest.fixture()
+    def _remove_files(request):
+        yield _remove_files
+
         for filename in filenames:
             try:
                 os.remove(filename)
