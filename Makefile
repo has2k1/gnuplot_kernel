@@ -43,16 +43,16 @@ coverage:
 	coverage html
 	$(BROWSER) htmlcov/index.html
 
-release: clean
-	twine upload dist/*
-
-release-test: clean
-	twine upload -r pypitest dist/*
-
 dist: clean
 	python setup.py sdist
 	python setup.py bdist_wheel
 	ls -l dist
+
+release: dist
+	twine upload dist/*
+
+release-test: dist
+	twine upload -r pypitest dist/*
 
 install: clean
 	python setup.py install
