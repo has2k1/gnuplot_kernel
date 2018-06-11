@@ -225,12 +225,20 @@ class GnuplotKernel(ProcessMetaKernel):
         """
         Start gnuplot and return wrapper around the REPL
         """
-        if not pexpect.which('gnuplot'):
+        if pexpect.which('gnuplot'):
+            program = 'gnuplot'
+        elif pexpect.which('gnuplot.exe'):
+            program = 'gnuplot.exe'
+        else:
             raise Exception("gnuplot not found.")
 
         # We don't want help commands getting stuck,
         # use a non interactive PAGER
-        command = 'env PAGER=cat gnuplot'
+        if pexpect.which('env') and pexpect.which('cat'):
+            command = 'env PAGER=cat {}'.format(program)
+        else:
+            command = program
+
         d = dict(cmd_or_spawn=command,
                  prompt_regex=u('\w*> $'),
                  prompt_change_cmd=None)
