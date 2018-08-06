@@ -10,5 +10,5 @@ wheel
 twine
 
 # Linting
-pep8
+pycodestyle
 flake8
