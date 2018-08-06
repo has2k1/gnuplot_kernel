@@ -24,15 +24,17 @@ Installation
 .. code-block:: bash
 
    pip install gnuplot_kernel
+   python -m gnuplot_kernel install --user
 
-   # or to upgrade
-   pip install --upgrade gnuplot_kernel
+The last command installs a kernel spec file for the current python installation. This
+is the file that allows you to choose a jupyter kernel in a notebook.
 
 **Development version**
 
 .. code-block:: bash
 
    pip install git+https://github.com/has2k1/gnuplot_kernel.git@master
+   python -m gnuplot_kernel install --user
 
 
 Requires

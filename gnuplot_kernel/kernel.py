@@ -1,4 +1,5 @@
 from __future__ import print_function
+import sys
 import re
 import os.path
 import time
@@ -46,6 +47,14 @@ class GnuplotKernel(ProcessMetaKernel):
         'file_extension': '.gp',
         'codemirror_mode': 'Octave',
         'help_links': MetaKernel.help_links,
+    }
+    kernel_json = {
+        'argv': [sys.executable,
+                 '-m', 'gnuplot_kernel',
+                 '-f', '{connection_file}'],
+        'display_name': 'gnuplot',
+        'language': 'gnuplot',
+        'name': 'gnuplot',
     }
 
     inline_plotting = True
