@@ -206,6 +206,47 @@ def test_bad_prompt():
     assert 'warning' in text.lower()
 
 
+def test_data_block():
+    kernel = get_kernel(GnuplotKernel)
+
+    # Good data block
+    code = """
+$DATA << EOD
+# x y
+1 1
+2 2
+3 3
+4 4
+EOD
+plot $DATA
+    """
+    kernel.do_execute(code)
+    text = get_log_text(kernel)
+    assert text.count('Display Data') == 1
+    clear_log_text(kernel)
+
+    # Badly terminated data block
+    bad_code = """
+$DATA << EOD
+# x y
+1 1
+2 2
+3 3
+4 4
+EODX
+plot $DATA
+    """
+    kernel.do_execute(bad_code)
+    text = get_log_text(kernel)
+    assert 'Error' in text
+    clear_log_text(kernel)
+
+    # Good code should work after the bad_code
+    kernel.do_execute(code)
+    text = get_log_text(kernel)
+    assert text.count('Display Data') == 1
+
+
 # magics #
 
 def test_cell_magic():

@@ -8,11 +8,21 @@ from .exceptions import GnuplotError
 
 CRLF = '\r\n'
 ERROR_REs = [re.compile(r'^\s*\^\s*\n')]
+NO_BLOCK = ''
+PROMPT = 'gnuplot>'
+PROMPT_RE = re.compile(r'^\s*gnuplot>\s*$')
 
 
 class GnuplotREPLWrapper(REPLWrapper):
     # The prompt after the commands run
     prompt = ''
+    _blocks = {
+        'data': {
+            'start_re': re.compile(r'^\$\w+\s+<<\s*(?P<end>\w+)$'),
+            'end_re': re.compile(r'^(?P<end>\w+)$')
+        }
+    }
+    _current_block = NO_BLOCK
 
     def exit(self):
         """
@@ -90,6 +100,93 @@ class GnuplotREPLWrapper(REPLWrapper):
                        "in {} seconds").format(timeout)
                 raise GnuplotError(msg)
 
+    def _end_of_block(self, stmt, end_string):
+        """
+        Detect the end of block statements
+
+        Parameters
+        ----------
+        stmt : str
+            Statement to be executed by gnuplot repl
+
+        Returns
+        -------
+        end_string : str
+            Terminal string for the current block.
+        """
+        pattern_re = self._blocks[self._current_block]['end_re']
+        m = pattern_re.match(stmt)
+        if m:
+            if m.group('end') == end_string:
+                return True
+        return False
+
+    def _start_of_block(self, stmt):
+        """
+        Detect the start of block statements
+
+        Parameters
+        ----------
+        stmt : str
+            Statement to be executed by gnuplot repl
+        Returns
+        -------
+        block_type : str
+            Name of the block that has been detected.
+            Returns an empty string if none has been detected.
+        end_string : str
+            Terminal string for the block that has been detected.
+            Returns an empty string if none has been detected.
+        """
+        # These are used to detect the end of the block
+        block_type = NO_BLOCK
+        end_string = ''
+        for _type, regexps in self._blocks.items():
+            m = re.match(regexps['start_re'], stmt)
+            if m:
+                block_type = _type
+                end_string = m.group('end')
+                break
+        return block_type, end_string
+
+    def _splitlines(self, code):
+        """
+        Split the code into lines that will be run
+        """
+        # Statements in a block are not followed by a prompt, this
+        # confuses the repl processing. We detect a block and concatenate
+        # it into single line so that after executing the line we can
+        # get a prompt.
+        lines = []
+        block_lines = []
+        end_string = ''
+        stmts = code.splitlines()
+        for stmt in stmts:
+            if self._current_block:
+                block_lines.append(stmt)
+                if self._end_of_block(stmt, end_string):
+                    self._current_block = NO_BLOCK
+                    block_lines.append('')
+                    block = '\n'.join(block_lines)
+                    lines.append(block)
+                    block_lines = []
+                    end_string = ''
+            else:
+                block_name, end_string = self._start_of_block(stmt)
+                if block_name:
+                    self._current_block = block_name
+                    block_lines.append(stmt)
+                else:
+                    lines.append(stmt)
+
+        if self._current_block:
+            msg = 'Error: {} block not terminated correctly.'.format(
+                self._current_block)
+            self._current_block = NO_BLOCK
+            raise GnuplotError(msg)
+
+        return lines
+
     def run_command(self, code, timeout=-1, stream_handler=None,
                     stdin_handler=None):
         """
@@ -101,8 +198,8 @@ class GnuplotREPLWrapper(REPLWrapper):
         code = self.validate_input(code)
 
         # Split up multiline commands and feed them in bit-by-bit
-        stmts = code.splitlines()
-        output = []
+        stmts = self._splitlines(code)
+        output_lines = []
         for line in stmts:
             self.send(line)
             self._force_prompt()
@@ -116,6 +213,10 @@ class GnuplotREPLWrapper(REPLWrapper):
                     line, textwrap.dedent(retval))
                 raise GnuplotError(msg)
 
-            output.append(retval)
+            # Sometimes block stmts like datablocks make the
+            # the prompt leak into the return value
+            retval = retval.replace(PROMPT,  '').strip(' ')
+            output_lines.append(retval)
 
-        return ''.join(output)
+        output = ''.join(output_lines)
+        return output

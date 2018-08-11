@@ -9,7 +9,7 @@ from IPython.display import Image, SVG
 from metakernel import MetaKernel, ProcessMetaKernel, pexpect, u
 from metakernel.process_metakernel import TextOutput
 
-from .replwrap import GnuplotREPLWrapper
+from .replwrap import GnuplotREPLWrapper, PROMPT
 from .exceptions import GnuplotError
 
 # This is the only place that the version is
@@ -271,7 +271,7 @@ class GnuplotKernel(ProcessMetaKernel):
             else:
                 return ''
         res = self.do_execute_direct('help %s' % obj)
-        text = res.output.strip().rstrip('gnuplot>')
+        text = res.output.strip().rstrip(PROMPT)
         self.bad_prompt_warning()
         return text
 
