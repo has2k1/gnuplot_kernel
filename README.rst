@@ -16,7 +16,7 @@ extension allowing for `gnuplot` code in the same `notebook`
 as `python` code.
 
 .. image:: https://mybinder.org/badge_logo.svg
-  :target: https://mybinder.org/v2/gh/has2k1/gnuplot_kernel/master
+  :target: https://mybinder.org/v2/gh/has2k1/gnuplot_kernel/master?filepath=examples
 
 Installation
 ============
