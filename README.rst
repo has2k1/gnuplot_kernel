@@ -9,14 +9,13 @@ Build Status         |buildstatus|_
 Coverage             |coverage|_
 =================    ===============
 
+.. image:: https://mybinder.org/badge_logo.svg
+  :target: https://mybinder.org/v2/gh/has2k1/gnuplot_kernel/master?filepath=examples
 
 `gnuplot_kernel` has been developed for use specifically with
 `Jupyter Notebook`. It can also be loaded as an `IPython`
 extension allowing for `gnuplot` code in the same `notebook`
 as `python` code.
-
-.. image:: https://mybinder.org/badge_logo.svg
-  :target: https://mybinder.org/v2/gh/has2k1/gnuplot_kernel/master?filepath=examples
 
 Installation
 ============
