@@ -1,19 +1,15 @@
-sudo: required
-
+os: linux
+dist: xenial
 language: python
 
 python:
-   - 2.7
-   - 3.6
+   - 3.6  # Minimum
+   - 3.8
 
-# NOTE: Enable this when travis offers a dist > ubuntu trusty which installs
-# > gnuplot-5.0. Remember to remove ruby and before_install ... and change to
-# sudo: false
-#
-# addons:
-#   apt:
-#     packages:
-#       - gnuplot
+addons:
+  apt:
+    packages:
+      - gnuplot
 
 cache: pip
 
@@ -21,15 +17,7 @@ notifications:
   email: false
 
 before_install:
-  - sudo apt-get install libcairo2-dev
-  - sudo apt-get install libpango1.0-dev
-  - curl -L https://downloads.sourceforge.net/project/gnuplot/gnuplot/5.2.4/gnuplot-5.2.4.tar.gz > gnuplot-5.2.4.tar.gz
-  - tar xzf gnuplot-5.2.4.tar.gz
-  - pushd gnuplot-5.2.4
-  - ./configure
-  - make && sudo make install-strip
-  - gnuplot --version
-  - popd
+   - gnuplot --version
 
 install:
    - pip install ipykernel metakernel
