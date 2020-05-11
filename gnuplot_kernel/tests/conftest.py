@@ -1,11 +1,5 @@
 import os
 
-try:
-    FileNotFoundError
-except NameError:
-    # Python 2
-    FileNotFoundError = OSError
-
 
 def remove_files(*filenames):
     """

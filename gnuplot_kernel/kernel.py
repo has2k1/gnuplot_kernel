@@ -1,4 +1,3 @@
-from __future__ import print_function
 import sys
 import re
 import os.path
@@ -16,12 +15,6 @@ from .exceptions import GnuplotError
 # specified
 __version__ = '0.3.0'
 
-try:
-    FileNotFoundError
-except NameError:
-    # Python 2
-    FileNotFoundError = OSError
-
 # name of the command i.e first token
 CMD_RE = re.compile(r'^\s*(\w+)\s?')
 # "set multiplot" and abbreviated variants
@@ -33,6 +26,59 @@ PLOT_CMDS = {
     'splot', 'splo', 'spl', 'sp',
     'replot', 'replo', 'repl', 'rep',
 }
+# "set output" and abbreviated variants
+SET_OUTPUT_RE = re.compile(
+    r'\s*set\s+o(?:u|ut|utp|utpu|utput)?(?:\s+|$)'
+)
+
+# "unset output" and abbreviated variants
+UNSET_OUTPUT_RE = re.compile(
+    r'\s*uns(?:e|et)?\s+o(?:u|ut|utp|utpu|utput)?\s*'
+)
+
+
+# funtions to recognise gnuplot statements that determine
+# how we add temporary files for the images shown by jupyter
+def is_set_output(stmt):
+    """
+    Return True if stmt is a 'set output' statement
+    """
+    m = re.match(SET_OUTPUT_RE, stmt)
+    return True if m else False
+
+
+def is_unset_output(stmt):
+    """
+    Return True if stmt is an 'unset output' statement
+    """
+    m = re.match(UNSET_OUTPUT_RE, stmt)
+    return True if m else False
+
+
+def is_set_multiplot(stmt):
+    """
+    Return True if stmt is a plot statement
+    """
+    m = re.match(MULTI_RE, stmt)
+    return True if m else False
+
+
+def is_unset_multiplot(stmt):
+    """
+    Return True if stmt is a plot statement
+    """
+    m = re.match(UNMULTI_RE, stmt)
+    return True if m else False
+
+
+def is_plot(stmt):
+    """
+    Return True if stmt is a plot statement
+    """
+    m = re.match(CMD_RE, stmt)
+    if m:
+        return m.group(1) in PLOT_CMDS
+    return False
 
 
 class GnuplotKernel(ProcessMetaKernel):
@@ -63,32 +109,6 @@ class GnuplotKernel(ProcessMetaKernel):
     _image_files = []
     _error = False
 
-    @staticmethod
-    def is_plot(stmt):
-        """
-        Return True if stmt is a plot statement
-        """
-        m = re.match(CMD_RE, stmt)
-        if m:
-            return m.group(1) in PLOT_CMDS
-        return False
-
-    @staticmethod
-    def is_set_multiplot(stmt):
-        """
-        Return True if stmt is a plot statement
-        """
-        m = re.match(MULTI_RE, stmt)
-        return True if m else False
-
-    @staticmethod
-    def is_unset_multiplot(stmt):
-        """
-        Return True if stmt is a plot statement
-        """
-        m = re.match(UNMULTI_RE, stmt)
-        return True if m else False
-
     def bad_prompt_warning(self):
         """
         Print warning if the prompt is not 'gnuplot>'
@@ -99,6 +119,16 @@ class GnuplotKernel(ProcessMetaKernel):
             print(msg)
 
     def do_execute_direct(self, code):
+        # We wrap the real function so that gnuplot_kernel can
+        # give a message when an exception occurs. Without
+        # this, an exception happens silently
+        try:
+            return self._do_execute_direct(code)
+        except Exception as err:
+            print(f"Error: {err}")
+            raise err
+
+    def _do_execute_direct(self, code):
         """
         Execute gnuplot code
         """
@@ -141,28 +171,35 @@ class GnuplotKernel(ProcessMetaKernel):
         # Ensure that there are no stale images
         self.delete_image_files()
 
-        def append_output_stmt(lines):
+        def set_output_inline(lines):
             filename = self.get_image_filename()
             if filename:
                 lines.append("set output '{}'".format(filename))
 
-        # We automatically create an output file before every
-        # recognisable plot statement is executed or before
-        # a multiplot block. When inside a multiplot block
-        # image files are not created.
-        lines = []
-        inside_multiplot = False
-        for stmt in code.splitlines():
-            if self.is_set_multiplot(stmt):
-                inside_multiplot = True
-                append_output_stmt(lines)
-            elif self.is_unset_multiplot(stmt):
-                inside_multiplot = False
+        # We automatically create an output file for the following
+        # cases if the user has not created one.
+        #    - before every every plot statement that is not
+        #      inside a multiplot block
+        #    - before every multiplot block
 
-            if self.is_plot(stmt) and not inside_multiplot:
-                append_output_stmt(lines)
+        lines = []
+        sm = StateMachine()
+        is_joined_stmt = False
+        for stmt in code.splitlines():
+            sm.transition(stmt)
+            add_inline_plot = (
+                sm.prev_cur in (
+                    ('none', 'plot'),
+                    ('none', 'multiplot'),
+                    ('plot', 'plot')
+                )
+                and not is_joined_stmt
+            )
+            if add_inline_plot:
+                set_output_inline(lines)
 
             lines.append(stmt)
+            is_joined_stmt = stmt.strip().endswith('\\')
 
         # Make gnuplot flush the output
         if not lines[-1].endswith('\\'):
@@ -207,9 +244,10 @@ class GnuplotKernel(ProcessMetaKernel):
                 size = 0
 
             if not size:
-                msg = ("An unknown error occured. Failed to "
-                       "read and display image file from "
-                       "gnuplot.")
+                msg = (
+                    "Failed to read and display image file from gnuplot."
+                    "May be you have plotted to a non interactive terminal."
+                )
                 print(msg)
                 continue
 
@@ -295,3 +333,71 @@ class GnuplotKernel(ProcessMetaKernel):
 
         cmd = 'set terminal {}'.format(settings['termspec'])
         self.do_execute_direct(cmd)
+
+
+class StateMachine:
+    """
+    Track context given gnuplot statements
+
+    This is used to help us tell when to add inline commands
+    so that gnuplot can create inline images for the notebook
+    """
+    states = ['none', 'plot', 'output', 'multiplot', 'output_multiplot']
+    previous = 'none'
+    _current = 'none'
+
+    @property
+    def prev_cur(self):
+        return (self.previous, self.current)
+
+    @property
+    def current(self):
+        return self._current
+
+    @current.setter
+    def current(self, value):
+        self.previous = self._current
+        self._current = value
+
+    def transition(self, stmt):
+        lookup = {
+            s: getattr(self, f'transition_from_{s}')
+            for s in self.states
+        }
+        _transition = lookup[self.current]
+        self.previous = self._current
+        return _transition(stmt)
+
+    def transition_from_plot(self, stmt):
+        if self.current == 'output':
+            self.current = 'none'
+        elif self.current == 'plot':
+            if is_plot(stmt):
+                self.current = 'plot'
+            else:
+                self.current = 'none'
+
+    def transition_from_none(self, stmt):
+        if is_plot(stmt):
+            self.current = 'plot'
+        elif is_set_output(stmt):
+            self.current = 'output'
+        elif is_set_multiplot(stmt):
+            self.current = 'multiplot'
+
+    def transition_from_output(self, stmt):
+        if is_plot(stmt):
+            self.current = 'plot'
+        elif is_set_multiplot(stmt):
+            self.current = 'output_multiplot'
+        elif is_unset_output(stmt):
+            self.current = 'none'
+
+    def transition_from_multiplot(self, stmt):
+        if is_unset_multiplot(stmt):
+            self.current = 'none'
+
+    def transition_from_output_multiplot(self, stmt):
+        if is_unset_multiplot(stmt):
+            self.previous = self.current
+            self.current = 'output'

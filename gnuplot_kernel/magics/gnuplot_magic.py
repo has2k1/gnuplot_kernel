@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from IPython.core.magic import (register_line_magic,
                                 register_cell_magic)
 from metakernel import Magic
