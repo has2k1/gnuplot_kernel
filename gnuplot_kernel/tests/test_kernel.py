@@ -166,6 +166,20 @@ def test_multiplot():
     text = get_log_text(kernel)
     assert text.count('Display Data') == 1
 
+    # With output
+    code = """
+    set terminal pncairo
+    set output 'multiplot-sin-cos.png'
+    set multiplot layout 2, 1
+    plot sin(x)
+    plot cos(x)
+    unset multiplot
+    unset output
+    """
+    kernel.do_execute(code)
+    assert os.path.exists('multiplot-sin-cos.png')
+    remove_files('multiplot-sin-cos.png')
+
 
 def test_help():
     kernel = get_kernel(GnuplotKernel)
