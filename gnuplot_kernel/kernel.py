@@ -3,6 +3,7 @@ import re
 import os.path
 import time
 import random
+import uuid
 
 from IPython.display import Image, SVG
 from metakernel import MetaKernel, ProcessMetaKernel, pexpect, u
@@ -218,9 +219,8 @@ class GnuplotKernel(ProcessMetaKernel):
         # Later on when we check if the file exists we know
         # whodunnit.
         settings = self.plot_settings
-        filename = '/tmp/gnuplot-inline-{}.{}.{}'.format(
-            time.time(),
-            random.randint(1, 10**12),
+        filename = '/tmp/gnuplot-inline-{}.{}'.format(
+            uuid.uuid1(),
             settings['format'])
         filename = filename
         self._image_files.append(filename)
