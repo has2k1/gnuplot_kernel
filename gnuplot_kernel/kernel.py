@@ -1,8 +1,6 @@
 import sys
 import re
 import os.path
-import time
-import random
 import uuid
 
 from IPython.display import Image, SVG
