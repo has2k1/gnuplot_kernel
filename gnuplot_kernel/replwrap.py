@@ -216,7 +216,11 @@ class GnuplotREPLWrapper(REPLWrapper):
             # Sometimes block stmts like datablocks make the
             # the prompt leak into the return value
             retval = retval.replace(PROMPT,  '').strip(' ')
-            output_lines.append(retval)
+
+            # Some gnuplot installations return the input statements
+            # We do not count those as output
+            if retval.strip() != line.strip():
+                output_lines.append(retval)
 
         output = ''.join(output_lines)
         return output
