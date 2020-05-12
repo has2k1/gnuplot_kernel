@@ -374,6 +374,8 @@ class StateMachine:
         elif self.current == 'plot':
             if is_plot(stmt):
                 self.current = 'plot'
+            elif is_set_output(stmt):
+                self.current = 'output'
             else:
                 self.current = 'none'
 

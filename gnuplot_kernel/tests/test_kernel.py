@@ -86,7 +86,19 @@ def test_file_plots():
     kernel.do_execute(code)
     assert os.path.exists('sine-cosine.png')
 
+    # Multiple line statement
+    code = """
+    set output 'tan.png'
+    plot tan(x)
+    set output 'tan2.png'
+    replot
+    """
+    kernel.do_execute(code)
+    assert os.path.exists('tan.png')
+    assert os.path.exists('tan2.png')
+
     remove_files('sine.png', 'sine-cosine.png')
+    remove_files('tan.png', 'tan2.png')
 
 
 def test_inline_plots():
