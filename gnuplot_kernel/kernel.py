@@ -12,7 +12,7 @@ from .exceptions import GnuplotError
 
 # This is the only place that the version is
 # specified
-__version__ = '0.3.0'
+__version__ = '0.4.0'
 
 # name of the command i.e first token
 CMD_RE = re.compile(r'^\s*(\w+)\s?')
