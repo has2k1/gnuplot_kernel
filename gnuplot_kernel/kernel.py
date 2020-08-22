@@ -244,7 +244,9 @@ class GnuplotKernel(ProcessMetaKernel):
             if not size:
                 msg = (
                     "Failed to read and display image file from gnuplot."
-                    "May be you have plotted to a non interactive terminal."
+                    "Possibly:\n"
+                    "1. You have plotted to a non interactive terminal.\n"
+                    "2. You have an invalid expression."
                 )
                 print(msg)
                 continue
