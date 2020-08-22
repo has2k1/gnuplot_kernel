@@ -17,7 +17,7 @@ __classifiers__ = [
     'Topic :: System :: Shells',
 ]
 __install_requires__ = [
-    'metakernel >= 0.20.14',
+    'metakernel >= 0.24.4',
     'notebook >= 5.5.0'
 ]
 __packages__ = find_packages(
