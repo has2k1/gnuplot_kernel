@@ -4,7 +4,7 @@ import os.path
 import uuid
 
 from IPython.display import Image, SVG
-from metakernel import MetaKernel, ProcessMetaKernel, pexpect, u
+from metakernel import MetaKernel, ProcessMetaKernel, pexpect
 from metakernel.process_metakernel import TextOutput
 
 from .replwrap import GnuplotREPLWrapper, PROMPT
@@ -287,7 +287,7 @@ class GnuplotKernel(ProcessMetaKernel):
             command = program
 
         d = dict(cmd_or_spawn=command,
-                 prompt_regex=u('\w*> $'),
+                 prompt_regex=r'\w*> $',
                  prompt_change_cmd=None)
         wrapper = GnuplotREPLWrapper(**d)
         # No sleeping before sending commands to gnuplot
