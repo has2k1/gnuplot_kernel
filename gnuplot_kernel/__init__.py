@@ -7,7 +7,7 @@ from importlib.metadata import version, PackageNotFoundError
 
 
 try:
-    __version__ = version('gnuplopt_kernel')
+    __version__ = version('gnuplot_kernel')
 except PackageNotFoundError:
     # package is not installed
     pass
