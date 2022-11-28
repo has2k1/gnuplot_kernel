@@ -12,6 +12,7 @@ help:
 	@echo "release - package and upload a release"
 	@echo "dist - package"
 	@echo "install - install the package to the active Python's site-packages"
+	@echo "develop - install the package in development mode"
 
 clean: clean-build clean-pyc clean-test
 
@@ -36,7 +37,7 @@ lint:
 	flake8 gnuplot_kernel
 
 test: clean-test
-	pytest --cov=gnuplot_kernel
+	pytest
 
 coverage:
 	coverage report -m
@@ -44,8 +45,7 @@ coverage:
 	$(BROWSER) htmlcov/index.html
 
 dist: clean
-	python setup.py sdist
-	python setup.py bdist_wheel
+	python setup.py sdist bdist_wheel
 	ls -l dist
 
 release: dist
@@ -56,3 +56,6 @@ release-test: dist
 
 install: clean
 	python setup.py install
+
+develop: clean-pyc
+	python setup.py develop

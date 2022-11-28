@@ -7,12 +7,9 @@ from IPython.display import Image, SVG
 from metakernel import MetaKernel, ProcessMetaKernel, pexpect, u
 from metakernel.process_metakernel import TextOutput
 
+from . import __version__
 from .replwrap import GnuplotREPLWrapper, PROMPT
 from .exceptions import GnuplotError
-
-# This is the only place that the version is
-# specified
-__version__ = '0.4.1'
 
 # name of the command i.e first token
 CMD_RE = re.compile(r'^\s*(\w+)\s?')
