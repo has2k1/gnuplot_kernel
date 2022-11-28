@@ -1,5 +1,4 @@
 import sys
-import re
 import os.path
 import uuid
 
@@ -7,74 +6,10 @@ from IPython.display import Image, SVG
 from metakernel import MetaKernel, ProcessMetaKernel, pexpect
 from metakernel.process_metakernel import TextOutput
 
-from .replwrap import GnuplotREPLWrapper, PROMPT
+from .statement import STMT
 from .exceptions import GnuplotError
+from .replwrap import GnuplotREPLWrapper, PROMPT_RE, PROMPT_REMOVE_RE
 from .utils import get_version
-
-# name of the command i.e first token
-CMD_RE = re.compile(r'^\s*(\w+)\s?')
-# "set multiplot" and abbreviated variants
-MULTI_RE = re.compile(r'\s*set\s+multip(?:l|lo|lot)?')
-# "unset multiplot" and abbreviated variants
-UNMULTI_RE = re.compile(r'\s*uns(?:e|et)?\s+multip(?:l|lo|lot)?')
-PLOT_CMDS = {
-    'plot', 'plo', 'pl', 'p',
-    'splot', 'splo', 'spl', 'sp',
-    'replot', 'replo', 'repl', 'rep',
-}
-# "set output" and abbreviated variants
-SET_OUTPUT_RE = re.compile(
-    r'\s*set\s+o(?:u|ut|utp|utpu|utput)?(?:\s+|$)'
-)
-
-# "unset output" and abbreviated variants
-UNSET_OUTPUT_RE = re.compile(
-    r'\s*uns(?:e|et)?\s+o(?:u|ut|utp|utpu|utput)?\s*'
-)
-
-
-# funtions to recognise gnuplot statements that determine
-# how we add temporary files for the images shown by jupyter
-def is_set_output(stmt):
-    """
-    Return True if stmt is a 'set output' statement
-    """
-    m = re.match(SET_OUTPUT_RE, stmt)
-    return True if m else False
-
-
-def is_unset_output(stmt):
-    """
-    Return True if stmt is an 'unset output' statement
-    """
-    m = re.match(UNSET_OUTPUT_RE, stmt)
-    return True if m else False
-
-
-def is_set_multiplot(stmt):
-    """
-    Return True if stmt is a plot statement
-    """
-    m = re.match(MULTI_RE, stmt)
-    return True if m else False
-
-
-def is_unset_multiplot(stmt):
-    """
-    Return True if stmt is a plot statement
-    """
-    m = re.match(UNMULTI_RE, stmt)
-    return True if m else False
-
-
-def is_plot(stmt):
-    """
-    Return True if stmt is a plot statement
-    """
-    m = re.match(CMD_RE, stmt)
-    if m:
-        return m.group(1) in PLOT_CMDS
-    return False
 
 
 class GnuplotKernel(ProcessMetaKernel):
@@ -184,7 +119,8 @@ class GnuplotKernel(ProcessMetaKernel):
         lines = []
         sm = StateMachine()
         is_joined_stmt = False
-        for stmt in code.splitlines():
+        for line in code.splitlines():
+            stmt = STMT(line)
             sm.transition(stmt)
             add_inline_plot = (
                 sm.prev_cur in (
@@ -286,9 +222,11 @@ class GnuplotKernel(ProcessMetaKernel):
         else:
             command = program
 
-        d = dict(cmd_or_spawn=command,
-                 prompt_regex=r'\w*> $',
-                 prompt_change_cmd=None)
+        d = dict(
+            cmd_or_spawn=command,
+            prompt_regex=PROMPT_RE,
+            prompt_change_cmd=None
+        )
         wrapper = GnuplotREPLWrapper(**d)
         # No sleeping before sending commands to gnuplot
         wrapper.child.delaybeforesend = 0
@@ -309,7 +247,7 @@ class GnuplotKernel(ProcessMetaKernel):
             else:
                 return ''
         res = self.do_execute_direct('help %s' % obj)
-        text = res.output.strip().rstrip(PROMPT)
+        text = PROMPT_REMOVE_RE.sub('', res.output)
         self.bad_prompt_warning()
         return text
 
@@ -372,34 +310,34 @@ class StateMachine:
         if self.current == 'output':
             self.current = 'none'
         elif self.current == 'plot':
-            if is_plot(stmt):
+            if stmt.is_plot():
                 self.current = 'plot'
-            elif is_set_output(stmt):
+            elif stmt.is_set_output():
                 self.current = 'output'
             else:
                 self.current = 'none'
 
     def transition_from_none(self, stmt):
-        if is_plot(stmt):
+        if stmt.is_plot():
             self.current = 'plot'
-        elif is_set_output(stmt):
+        elif stmt.is_set_output():
             self.current = 'output'
-        elif is_set_multiplot(stmt):
+        elif stmt.is_set_multiplot():
             self.current = 'multiplot'
 
     def transition_from_output(self, stmt):
-        if is_plot(stmt):
+        if stmt.is_plot():
             self.current = 'plot'
-        elif is_set_multiplot(stmt):
+        elif stmt.is_set_multiplot():
             self.current = 'output_multiplot'
-        elif is_unset_output(stmt):
+        elif stmt.is_unset_output():
             self.current = 'none'
 
     def transition_from_multiplot(self, stmt):
-        if is_unset_multiplot(stmt):
+        if stmt.is_unset_multiplot():
             self.current = 'none'
 
     def transition_from_output_multiplot(self, stmt):
-        if is_unset_multiplot(stmt):
+        if stmt.is_unset_multiplot():
             self.previous = self.current
             self.current = 'output'

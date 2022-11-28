@@ -4,13 +4,46 @@ import signal
 
 from metakernel import REPLWrapper
 from metakernel.pexpect import TIMEOUT
+
 from .exceptions import GnuplotError
 
+
 CRLF = '\r\n'
-ERROR_REs = [re.compile(r'^\s*\^\s*\n')]
 NO_BLOCK = ''
-PROMPT = 'gnuplot>'
-PROMPT_RE = re.compile(r'^\s*gnuplot>\s*$')
+
+ERROR_RE = [
+    re.compile(
+        r'^\s*'
+        r'\^'  # Indicates error on above line
+        r'\s*'
+        r'\n'
+    )
+]
+
+PROMPT_RE = re.compile(
+    # most likely "gnuplot> "
+    r'\w*>\s*$'
+)
+
+PROMPT_REMOVE_RE = re.compile(
+    r'\w*>\s*'
+)
+
+# Data block e.g.
+# $DATA << EOD
+# # x y
+# 1 1
+# 2 2
+# 3 3
+# EOD
+START_DATABLOCK_RE = re.compile(
+    # $DATA << EOD
+    r'^\$\w+\s+<<\s*(?P<end>\w+)$'
+)
+END_DATABLOCK_RE = re.compile(
+    # EOD
+    r'^(?P<end>\w+)$'
+)
 
 
 class GnuplotREPLWrapper(REPLWrapper):
@@ -18,8 +51,8 @@ class GnuplotREPLWrapper(REPLWrapper):
     prompt = ''
     _blocks = {
         'data': {
-            'start_re': re.compile(r'^\$\w+\s+<<\s*(?P<end>\w+)$'),
-            'end_re': re.compile(r'^(?P<end>\w+)$')
+            'start_re': START_DATABLOCK_RE,
+            'end_re': END_DATABLOCK_RE
         }
     }
     _current_block = NO_BLOCK
@@ -39,7 +72,7 @@ class GnuplotREPLWrapper(REPLWrapper):
         """
         Return True if text is recognised as error text
         """
-        for pattern in ERROR_REs:
+        for pattern in ERROR_RE:
             if pattern.match(text):
                 return True
         return False
@@ -115,8 +148,7 @@ class GnuplotREPLWrapper(REPLWrapper):
             Terminal string for the current block.
         """
         pattern_re = self._blocks[self._current_block]['end_re']
-        m = pattern_re.match(stmt)
-        if m:
+        if m := pattern_re.match(stmt):
             if m.group('end') == end_string:
                 return True
         return False
@@ -142,8 +174,7 @@ class GnuplotREPLWrapper(REPLWrapper):
         block_type = NO_BLOCK
         end_string = ''
         for _type, regexps in self._blocks.items():
-            m = re.match(regexps['start_re'], stmt)
-            if m:
+            if m := regexps['start_re'].match(stmt):
                 block_type = _type
                 end_string = m.group('end')
                 break
@@ -215,7 +246,7 @@ class GnuplotREPLWrapper(REPLWrapper):
 
             # Sometimes block stmts like datablocks make the
             # the prompt leak into the return value
-            retval = retval.replace(PROMPT,  '').strip(' ')
+            retval = PROMPT_REMOVE_RE.sub('', retval).strip(' ')
 
             # Some gnuplot installations return the input statements
             # We do not count those as output
