@@ -15,6 +15,7 @@ pip-log.txt
 .tox
 htmlcov/
 .pytest_cache
+coverage.xml
 
 # other
 .cache
