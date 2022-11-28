@@ -7,9 +7,9 @@ from IPython.display import Image, SVG
 from metakernel import MetaKernel, ProcessMetaKernel, pexpect, u
 from metakernel.process_metakernel import TextOutput
 
-from . import __version__
 from .replwrap import GnuplotREPLWrapper, PROMPT
 from .exceptions import GnuplotError
+from .utils import get_version
 
 # name of the command i.e first token
 CMD_RE = re.compile(r'^\s*(\w+)\s?')
@@ -78,8 +78,11 @@ def is_plot(stmt):
 
 
 class GnuplotKernel(ProcessMetaKernel):
+    """
+    GnuplotKernel
+    """
     implementation = 'Gnuplot Kernel'
-    implementation_version = __version__
+    implementation_version = get_version('gnuplot_kernel')
     language = 'gnuplot'
     language_version = '5.0'
     banner = 'Gnuplot Kernel'

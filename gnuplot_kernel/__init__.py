@@ -1,13 +1,17 @@
+"""
+Gnuplot Kernel Package
+"""
+from importlib.metadata import PackageNotFoundError
+
 from .kernel import GnuplotKernel
 from .magics import register_ipython_magics
+from .utils import get_version
 
 __all__ = ['GnuplotKernel']
 
-from importlib.metadata import version, PackageNotFoundError
-
 
 try:
-    __version__ = version('gnuplot_kernel')
+    __version__ = get_version('gnuplot_kernel')
 except PackageNotFoundError:
     # package is not installed
     pass

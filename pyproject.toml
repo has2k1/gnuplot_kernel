@@ -7,13 +7,34 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
-# pytest
-[tool.pytest.ini_options]
-testpaths = [
-    "tests"
-]
-addopts = "--pyargs --cov=gnuplot_kernel --cov-report=xml --import-mode=importlib"
-
 [tool.setuptools_scm]
 fallback_version = "999"
 version_scheme = 'post-release'
+
+# pytest
+[tool.pytest.ini_options]
+testpaths = [
+    "gnuplot_kernel/tests"
+]
+addopts = "--pyargs --cov --cov-report=xml --import-mode=importlib"
+
+# Coverage.py
+[tool.coverage.run]
+branch = true
+source = ["gnuplot_kernel"]
+include = ["gnuplot_kernel/*"]
+omit = [
+    "setup.py",
+    "gnuplot_kernel/__main__.py"
+]
+disable_warnings = ["include-ignored"]
+
+[tool.coverage.report]
+exclude_lines = [
+   "pragma: no cover",
+   "def __repr__",
+   "if __name__ == .__main__.:",
+   "def register_ipython_magics",
+   "def load_ipython_extension"
+]
+precision = 1
