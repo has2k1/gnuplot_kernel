@@ -1,5 +1,5 @@
-import os
 import weakref
+from pathlib import Path
 
 from metakernel.tests.utils import (get_kernel, get_log_text,
                                     clear_log_text)
@@ -74,7 +74,7 @@ def test_file_plots():
     plot sin(x)
     """
     kernel.do_execute(code)
-    assert os.path.exists('sine.png')
+    assert Path('sine.png').exists()
     clear_log_text(kernel)
 
     # Multiple line statement
@@ -84,7 +84,7 @@ def test_file_plots():
          cos(x)
     """
     kernel.do_execute(code)
-    assert os.path.exists('sine-cosine.png')
+    assert Path('sine-cosine.png').exists()
 
     # Multiple line statement
     code = """
@@ -94,8 +94,8 @@ def test_file_plots():
     replot
     """
     kernel.do_execute(code)
-    assert os.path.exists('tan.png')
-    assert os.path.exists('tan2.png')
+    assert Path('tan.png').exists()
+    assert Path('tan2.png').exists()
 
     remove_files('sine.png', 'sine-cosine.png')
     remove_files('tan.png', 'tan2.png')
@@ -177,7 +177,7 @@ def test_multiplot():
     unset output
     """
     kernel.do_execute(code)
-    assert os.path.exists('multiplot-sin-cos.png')
+    assert Path('multiplot-sin-cos.png').exists()
     remove_files('multiplot-sin-cos.png')
 
 
@@ -315,7 +315,7 @@ def test_cell_magic():
     plot cos(x)
     """
     kernel.do_execute(code)
-    assert os.path.exists('cosine.png')
+    assert Path('cosine.png').exists()
     clear_log_text(kernel)
 
     remove_files('cosine.png')
@@ -330,13 +330,13 @@ def test_reset_cell_magic():
     plot sin(x) + cos(x)
     """
     kernel.call_magic(code)
-    assert not os.path.exists('sine+cosine.png')
+    assert not Path('sine+cosine.png').exists()
 
     code = """
     unset key
     """
     kernel.do_execute(code)
-    assert os.path.exists('sine+cosine.png')
+    assert Path('sine+cosine.png').exists()
 
     remove_files('sine+cosine.png')
 
@@ -358,7 +358,7 @@ def test_reset_line_magic():
     unset key
     """
     kernel.do_execute(code)
-    assert not os.path.exists('sine+sine.png')
+    assert not Path('sine+sine.png').exists()
 
     # Bad inline backend
     # metakernel messes this exception!!
@@ -378,8 +378,8 @@ def test_remove_files():
     with open(filename, 'w'):
         pass
 
-    assert os.path.exists(filename)
+    assert Path(filename).exists()
 
     remove_files(filename)
 
-    assert not os.path.exists(filename)
+    assert not Path(filename).exists()
