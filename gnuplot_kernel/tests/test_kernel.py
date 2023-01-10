@@ -273,6 +273,18 @@ plot $DATA
     assert text.count('Display Data') == 1
 
 
+def test_do_for_loop():
+    kernel = get_kernel(GnuplotKernel)
+    code = """
+    do for [t=0:2] {
+      plot x**t t sprintf("x^%d",t)
+    }
+    """
+    kernel.do_execute(code)
+    text = get_log_text(kernel)
+    assert text.count('Display Data') == 3
+
+
 # magics #
 
 def test_cell_magic():

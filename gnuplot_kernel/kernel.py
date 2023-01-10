@@ -1,5 +1,6 @@
 import sys
-import os.path
+from itertools import chain
+from pathlib import Path
 import uuid
 
 from IPython.display import Image, SVG
@@ -10,6 +11,10 @@ from .statement import STMT
 from .exceptions import GnuplotError
 from .replwrap import GnuplotREPLWrapper, PROMPT_RE, PROMPT_REMOVE_RE
 from .utils import get_version
+
+
+IMG_COUNTER = '__gpk_img_index'
+IMG_COUNTER_FMT = '%03d'
 
 
 class GnuplotKernel(ProcessMetaKernel):
@@ -76,15 +81,13 @@ class GnuplotKernel(ProcessMetaKernel):
         success = True
 
         try:
-            result = super(GnuplotKernel,
-                           self).do_execute_direct(code, silent=True)
+            result = super().do_execute_direct(code, silent=True)
         except GnuplotError as e:
             result = TextOutput(e.message)
             success = False
 
         if self.reset_code:
-            super(GnuplotKernel, self).do_execute_direct(
-                self.reset_code, silent=True)
+            super().do_execute_direct(self.reset_code, silent=True)
 
         if self.inline_plotting:
             if success:
@@ -102,18 +105,21 @@ class GnuplotKernel(ProcessMetaKernel):
 
         This is what powers inline plotting
         """
-        # Ensure that there are no stale images
-        self.delete_image_files()
-
+        # "set output sprintf('foobar.%d.png', counter);"
+        # "counter=counter+1"
         def set_output_inline(lines):
-            filename = self.get_image_filename()
-            if filename:
-                lines.append("set output '{}'".format(filename))
+            tpl = self.get_image_filename()
+            if tpl:
+                cmd = (
+                    f"set output sprintf('{tpl}', {IMG_COUNTER});"
+                    f"{IMG_COUNTER}={IMG_COUNTER}+1"
+                )
+                lines.append(cmd)
 
         # We automatically create an output file for the following
         # cases if the user has not created one.
-        #    - before every every plot statement that is not
-        #      inside a multiplot block
+        #    - before every plot statement that is not in a
+        #      multiplot block
         #    - before every multiplot block
 
         lines = []
@@ -152,13 +158,24 @@ class GnuplotKernel(ProcessMetaKernel):
         # want to create the file, gnuplot will create it.
         # Later on when we check if the file exists we know
         # whodunnit.
-        settings = self.plot_settings
-        filename = '/tmp/gnuplot-inline-{}.{}'.format(
-            uuid.uuid1(),
-            settings['format'])
-        filename = filename
+        fmt = self.plot_settings['format']
+        filename = Path(
+            f'/tmp/gnuplot-inline-{uuid.uuid1()}'
+            f'.{IMG_COUNTER_FMT}'
+            f'.{fmt}'
+        )
         self._image_files.append(filename)
         return filename
+
+    def iter_image_files(self):
+        """
+        Iterate over the image files
+        """
+        it = chain(*[
+            sorted(f.parent.glob(f.name.replace(IMG_COUNTER_FMT, '*')))
+            for f in self._image_files
+        ])
+        return it
 
     def display_images(self):
         """
@@ -171,9 +188,9 @@ class GnuplotKernel(ProcessMetaKernel):
             else:
                 _Image = Image
 
-        for filename in self._image_files:
+        for filename in self.iter_image_files():
             try:
-                size = os.path.getsize(filename)
+                size = filename.stat().st_size
             except FileNotFoundError:
                 size = 0
 
@@ -187,7 +204,7 @@ class GnuplotKernel(ProcessMetaKernel):
                 print(msg)
                 continue
 
-            im = _Image(filename)
+            im = _Image(str(filename))
             self.Display(im)
 
     def delete_image_files(self):
@@ -196,9 +213,9 @@ class GnuplotKernel(ProcessMetaKernel):
         """
         # After display_images(), the real images are
         # no longer required.
-        for filename in self._image_files:
+        for filename in self.iter_image_files():
             try:
-                os.remove(filename)
+                filename.unlink()
             except FileNotFoundError:
                 pass
 
@@ -237,7 +254,7 @@ class GnuplotKernel(ProcessMetaKernel):
         Exit the gnuplot process and any other underlying stuff
         """
         self.wrapper.exit()
-        super(GnuplotKernel, self).do_shutdown(restart)
+        super().do_shutdown(restart)
 
     def get_kernel_help_on(self, info, level=0, none_on_fail=False):
         obj = info.get('help_obj', '')
@@ -250,6 +267,13 @@ class GnuplotKernel(ProcessMetaKernel):
         text = PROMPT_REMOVE_RE.sub('', res.output)
         self.bad_prompt_warning()
         return text
+
+    def reset_image_counter(self):
+        # Incremented after every plot image, and used in the
+        # plot image filename. Makes plotting in loops do_for
+        # loops work
+        cmd = f'{IMG_COUNTER}=0'
+        self.do_execute_direct(cmd)
 
     def handle_plot_settings(self):
         """
@@ -271,14 +295,15 @@ class GnuplotKernel(ProcessMetaKernel):
 
         cmd = 'set terminal {}'.format(settings['termspec'])
         self.do_execute_direct(cmd)
+        self.reset_image_counter()
 
 
 class StateMachine:
     """
     Track context given gnuplot statements
 
-    This is used to help us tell when to add inline commands
-    so that gnuplot can create inline images for the notebook
+    This is used to help us tell when to inject commands (i.e. set output)
+    that for inline plotting in the notebook.
     """
     states = ['none', 'plot', 'output', 'multiplot', 'output_multiplot']
     previous = 'none'
