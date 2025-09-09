@@ -27,12 +27,17 @@ requires-python = ">=3.10"
 [project.optional-dependencies]
 
 dev = [
+    "gnuplot_kernel[test]",
     "ruff",
-    "pytest-cov>=4.0.0",
-    "coveralls",
-    "matplotlib",
+    "matplotlib>=3.8.0",
     "pyright>=1.1.405",
 ]
+
+test = [
+    "pytest-cov>=4.0.0",
+    "coveralls>=4.0.1",
+]
+
 
 [project.urls]
 homepage = "https://github.com/has2k1/gnuplot_kernel"

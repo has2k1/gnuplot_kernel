@@ -40,7 +40,7 @@ jobs:
           sudo apt-get install gnuplot
           # Install as an editable so that the coverage path
           # is predicable
-          uv run uv pip install --resolution=${{ matrix.resolution }} -e ".[dev]"
+          uv run uv pip install --resolution=${{ matrix.resolution }} -e ".[test]"
 
       - name: Environment Information
         run: |
