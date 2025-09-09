@@ -10,7 +10,7 @@ class ResetMagic(Magic):
         Example:
             %reset
         """
-        self.kernel.reset_code = ''
+        self.kernel.reset_code = ""
 
     def cell_reset(self, line):
         """

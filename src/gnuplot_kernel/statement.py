@@ -5,59 +5,59 @@ import re
 
 # name of the command i.e first token
 CMD_RE = re.compile(
-    r'^\s*'
-    r'(?P<cmd>'
-    r'\w+'   # The command
-    r')'
-    r'\s?'
+    r"^\s*"
+    r"(?P<cmd>"
+    r"\w+"   # The command
+    r")"
+    r"\s?"
 )
 
 # plot statements
 PLOT_RE = re.compile(
-    r'^\s*'
-    r'(?P<plot_cmd>'
-    r'plot|plo|pl|p|'
-    r'splot|splo|spl|sp|'
-    r'replot|replo|repl|rep'
-    r')'
-    r'\s?'
+    r"^\s*"
+    r"(?P<plot_cmd>"
+    r"plot|plo|pl|p|"
+    r"splot|splo|spl|sp|"
+    r"replot|replo|repl|rep"
+    r")"
+    r"\s?"
 )
 
 # "set multiplot" and abbreviated variants
 SET_MULTIPLE_RE = re.compile(
-    r'\s*'
-    r'set'
-    r'\s+'
-    r'multip(?:lot|lo|l)?\b'
-    r'\b'
+    r"\s*"
+    r"set"
+    r"\s+"
+    r"multip(?:lot|lo|l)?\b"
+    r"\b"
 )
 
 # "unset multiplot" and abbreviated variants
 UNSET_MULTIPLE_RE = re.compile(
-    r'\s*'
-    r'(?:unset|unse|uns)'
-    r'\s+'
-    r'multip(?:lot|lo|l)?\b'
-    r'\b'
+    r"\s*"
+    r"(?:unset|unse|uns)"
+    r"\s+"
+    r"multip(?:lot|lo|l)?\b"
+    r"\b"
 )
 
 
 # "set output" and abbreviated variants
 SET_OUTPUT_RE = re.compile(
-    r'\s*'
-    r'set'
-    r'\s+'
-    r'(?:output|outpu|outp|out|ou|o)'
-    r'(?:\s+|$)'
+    r"\s*"
+    r"set"
+    r"\s+"
+    r"(?:output|outpu|outp|out|ou|o)"
+    r"(?:\s+|$)"
 )
 
 # "unset output" and abbreviated variants
 UNSET_OUTPUT_RE = re.compile(
-    r'\s*'
-    r'(?:unset|unse|uns)'
-    r'\s+'
-    r'(?:output|outpu|outp|out|ou|o)'
-    r'(?:\s+|$)'
+    r"\s*"
+    r"(?:unset|unse|uns)"
+    r"\s+"
+    r"(?:output|outpu|outp|out|ou|o)"
+    r"(?:\s+|$)"
 )
 
 

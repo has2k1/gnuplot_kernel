@@ -1,5 +1,6 @@
 import os
 
+
 def remove_files(*filenames):
     """
     Remove the files created during the test

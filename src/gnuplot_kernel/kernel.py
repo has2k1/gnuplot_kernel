@@ -1,49 +1,48 @@
 import sys
+import uuid
 from itertools import chain
 from pathlib import Path
-import uuid
 
-from IPython.display import Image, SVG
+from IPython.display import SVG, Image
 from metakernel import MetaKernel, ProcessMetaKernel, pexpect
 from metakernel.process_metakernel import TextOutput
 
-from .statement import STMT
 from .exceptions import GnuplotError
-from .replwrap import GnuplotREPLWrapper, PROMPT_RE, PROMPT_REMOVE_RE
+from .replwrap import PROMPT_RE, PROMPT_REMOVE_RE, GnuplotREPLWrapper
+from .statement import STMT
 from .utils import get_version
 
-
-IMG_COUNTER = '__gpk_img_index'
-IMG_COUNTER_FMT = '%03d'
+IMG_COUNTER = "__gpk_img_index"
+IMG_COUNTER_FMT = "%03d"
 
 
 class GnuplotKernel(ProcessMetaKernel):
     """
     GnuplotKernel
     """
-    implementation = 'Gnuplot Kernel'
-    implementation_version = get_version('gnuplot_kernel')
-    language = 'gnuplot'
-    language_version = '5.0'
-    banner = 'Gnuplot Kernel'
+    implementation = "Gnuplot Kernel"
+    implementation_version = get_version("gnuplot_kernel")
+    language = "gnuplot"
+    language_version = "5.0"
+    banner = "Gnuplot Kernel"
     language_info = {
-        'mimetype': 'text/x-gnuplot',
-        'name': 'gnuplot',
-        'file_extension': '.gp',
-        'codemirror_mode': 'Octave',
-        'help_links': MetaKernel.help_links,
+        "mimetype": "text/x-gnuplot",
+        "name": "gnuplot",
+        "file_extension": ".gp",
+        "codemirror_mode": "Octave",
+        "help_links": MetaKernel.help_links,
     }
     kernel_json = {
-        'argv': [sys.executable,
-                 '-m', 'gnuplot_kernel',
-                 '-f', '{connection_file}'],
-        'display_name': 'gnuplot',
-        'language': 'gnuplot',
-        'name': 'gnuplot',
+        "argv": [sys.executable,
+                 "-m", "gnuplot_kernel",
+                 "-f", "{connection_file}"],
+        "display_name": "gnuplot",
+        "language": "gnuplot",
+        "name": "gnuplot",
     }
 
     inline_plotting = True
-    reset_code = ''
+    reset_code = ""
     _first = True
     _image_files = []
     _error = False
@@ -52,7 +51,7 @@ class GnuplotKernel(ProcessMetaKernel):
         """
         Print warning if the prompt is not 'gnuplot>'
         """
-        if not self.wrapper.prompt.startswith('gnuplot>'):
+        if not self.wrapper.prompt.startswith("gnuplot>"):
             msg = ("Warning: The prompt is currently set "
                    "to '{}'".format(self.wrapper.prompt))
             print(msg)
@@ -130,9 +129,9 @@ class GnuplotKernel(ProcessMetaKernel):
             sm.transition(stmt)
             add_inline_plot = (
                 sm.prev_cur in (
-                    ('none', 'plot'),
-                    ('none', 'multiplot'),
-                    ('plot', 'plot')
+                    ("none", "plot"),
+                    ("none", "multiplot"),
+                    ("plot", "plot")
                 )
                 and not is_joined_stmt
             )
@@ -140,12 +139,12 @@ class GnuplotKernel(ProcessMetaKernel):
                 set_output_inline(lines)
 
             lines.append(stmt)
-            is_joined_stmt = stmt.strip().endswith('\\')
+            is_joined_stmt = stmt.strip().endswith("\\")
 
         # Make gnuplot flush the output
-        if not lines[-1].endswith('\\'):
-            lines.append('unset output')
-        code = '\n'.join(lines)
+        if not lines[-1].endswith("\\"):
+            lines.append("unset output")
+        code = "\n".join(lines)
         return code
 
     def get_image_filename(self):
@@ -158,11 +157,11 @@ class GnuplotKernel(ProcessMetaKernel):
         # want to create the file, gnuplot will create it.
         # Later on when we check if the file exists we know
         # whodunnit.
-        fmt = self.plot_settings['format']
+        fmt = self.plot_settings["format"]
         filename = Path(
-            f'/tmp/gnuplot-inline-{uuid.uuid1()}'
-            f'.{IMG_COUNTER_FMT}'
-            f'.{fmt}'
+            f"/tmp/gnuplot-inline-{uuid.uuid1()}"
+            f".{IMG_COUNTER_FMT}"
+            f".{fmt}"
         )
         self._image_files.append(filename)
         return filename
@@ -172,7 +171,7 @@ class GnuplotKernel(ProcessMetaKernel):
         Iterate over the image files
         """
         it = chain(*[
-            sorted(f.parent.glob(f.name.replace(IMG_COUNTER_FMT, '*')))
+            sorted(f.parent.glob(f.name.replace(IMG_COUNTER_FMT, "*")))
             for f in self._image_files
         ])
         return it
@@ -183,7 +182,7 @@ class GnuplotKernel(ProcessMetaKernel):
         """
         settings = self.plot_settings
         if self.inline_plotting:
-            if settings['format'] == 'svg':
+            if settings["format"] == "svg":
                 _Image = SVG
             else:
                 _Image = Image
@@ -225,17 +224,17 @@ class GnuplotKernel(ProcessMetaKernel):
         """
         Start gnuplot and return wrapper around the REPL
         """
-        if pexpect.which('gnuplot'):
-            program = 'gnuplot'
-        elif pexpect.which('gnuplot.exe'):
-            program = 'gnuplot.exe'
+        if pexpect.which("gnuplot"):
+            program = "gnuplot"
+        elif pexpect.which("gnuplot.exe"):
+            program = "gnuplot.exe"
         else:
             raise Exception("gnuplot not found.")
 
         # We don't want help commands getting stuck,
         # use a non interactive PAGER
-        if pexpect.which('env') and pexpect.which('cat'):
-            command = 'env PAGER=cat {}'.format(program)
+        if pexpect.which("env") and pexpect.which("cat"):
+            command = "env PAGER=cat {}".format(program)
         else:
             command = program
 
@@ -257,14 +256,14 @@ class GnuplotKernel(ProcessMetaKernel):
         super().do_shutdown(restart)
 
     def get_kernel_help_on(self, info, level=0, none_on_fail=False):
-        obj = info.get('help_obj', '')
+        obj = info.get("help_obj", "")
         if not obj or len(obj.split()) > 1:
             if none_on_fail:
                 return None
             else:
-                return ''
-        res = self.do_execute_direct('help %s' % obj)
-        text = PROMPT_REMOVE_RE.sub('', res.output)
+                return ""
+        res = self.do_execute_direct("help %s" % obj)
+        text = PROMPT_REMOVE_RE.sub("", res.output)
         self.bad_prompt_warning()
         return text
 
@@ -272,7 +271,7 @@ class GnuplotKernel(ProcessMetaKernel):
         # Incremented after every plot image, and used in the
         # plot image filename. Makes plotting in loops do_for
         # loops work
-        cmd = f'{IMG_COUNTER}=0'
+        cmd = f"{IMG_COUNTER}=0"
         self.do_execute_direct(cmd)
 
     def handle_plot_settings(self):
@@ -283,17 +282,17 @@ class GnuplotKernel(ProcessMetaKernel):
         is innadequate.
         """
         settings = self.plot_settings
-        if ('termspec' not in settings or
-                not settings['termspec']):
-            settings['termspec'] = ('pngcairo size 385, 256'
+        if ("termspec" not in settings or
+                not settings["termspec"]):
+            settings["termspec"] = ('pngcairo size 385, 256'
                                     ' font "Arial,10"')
-        if ('format' not in settings or
-                not settings['format']):
-            settings['format'] = 'png'
+        if ("format" not in settings or
+                not settings["format"]):
+            settings["format"] = "png"
 
-        self.inline_plotting = settings['backend'] == 'inline'
+        self.inline_plotting = settings["backend"] == "inline"
 
-        cmd = 'set terminal {}'.format(settings['termspec'])
+        cmd = "set terminal {}".format(settings["termspec"])
         self.do_execute_direct(cmd)
         self.reset_image_counter()
 
@@ -305,9 +304,9 @@ class StateMachine:
     This is used to help us tell when to inject commands (i.e. set output)
     that for inline plotting in the notebook.
     """
-    states = ['none', 'plot', 'output', 'multiplot', 'output_multiplot']
-    previous = 'none'
-    _current = 'none'
+    states = ["none", "plot", "output", "multiplot", "output_multiplot"]
+    previous = "none"
+    _current = "none"
 
     @property
     def prev_cur(self):
@@ -324,7 +323,7 @@ class StateMachine:
 
     def transition(self, stmt):
         lookup = {
-            s: getattr(self, f'transition_from_{s}')
+            s: getattr(self, f"transition_from_{s}")
             for s in self.states
         }
         _transition = lookup[self.current]
@@ -332,37 +331,37 @@ class StateMachine:
         return _transition(stmt)
 
     def transition_from_plot(self, stmt):
-        if self.current == 'output':
-            self.current = 'none'
-        elif self.current == 'plot':
+        if self.current == "output":
+            self.current = "none"
+        elif self.current == "plot":
             if stmt.is_plot():
-                self.current = 'plot'
+                self.current = "plot"
             elif stmt.is_set_output():
-                self.current = 'output'
+                self.current = "output"
             else:
-                self.current = 'none'
+                self.current = "none"
 
     def transition_from_none(self, stmt):
         if stmt.is_plot():
-            self.current = 'plot'
+            self.current = "plot"
         elif stmt.is_set_output():
-            self.current = 'output'
+            self.current = "output"
         elif stmt.is_set_multiplot():
-            self.current = 'multiplot'
+            self.current = "multiplot"
 
     def transition_from_output(self, stmt):
         if stmt.is_plot():
-            self.current = 'plot'
+            self.current = "plot"
         elif stmt.is_set_multiplot():
-            self.current = 'output_multiplot'
+            self.current = "output_multiplot"
         elif stmt.is_unset_output():
-            self.current = 'none'
+            self.current = "none"
 
     def transition_from_multiplot(self, stmt):
         if stmt.is_unset_multiplot():
-            self.current = 'none'
+            self.current = "none"
 
     def transition_from_output_multiplot(self, stmt):
         if stmt.is_unset_multiplot():
             self.previous = self.current
-            self.current = 'output'
+            self.current = "output"

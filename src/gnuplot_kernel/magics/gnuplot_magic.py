@@ -1,5 +1,4 @@
-from IPython.core.magic import (register_line_magic,
-                                register_cell_magic)
+from IPython.core.magic import register_cell_magic, register_line_magic
 from metakernel import Magic
 
 
@@ -44,22 +43,22 @@ class GnuplotMagic(Magic):
 
         """
         backend, terminal, termspec = _parse_args(args)
-        terminal = terminal or 'pngcairo'
-        inline_terminals = {'pngcairo': 'png',
-                            'png': 'png',
-                            'jpeg': 'jpg',
-                            'svg': 'svg'}
-        format = inline_terminals.get(terminal, 'png')
+        terminal = terminal or "pngcairo"
+        inline_terminals = {"pngcairo": "png",
+                            "png": "png",
+                            "jpeg": "jpg",
+                            "svg": "svg"}
+        format = inline_terminals.get(terminal, "png")
 
-        if backend == 'inline':
+        if backend == "inline":
             if terminal not in inline_terminals:
                 msg = ("For inline plots, the terminal must be "
                        "one of pngcairo, jpeg, svg or png")
                 raise ValueError(msg)
 
-        self.kernel.plot_settings['backend'] = backend
-        self.kernel.plot_settings['termspec'] = termspec
-        self.kernel.plot_settings['format'] = format
+        self.kernel.plot_settings["backend"] = backend
+        self.kernel.plot_settings["termspec"] = termspec
+        self.kernel.plot_settings["format"] = format
         self.kernel.handle_plot_settings()
 
     def cell_gnuplot(self):
@@ -111,8 +110,8 @@ def register_ipython_magics():
     kernel.makeSubkernel(ip.parent)
 
     # Make magics callable:
-    kernel.line_magics['gnuplot'] = magic
-    kernel.cell_magics['gnuplot'] = magic
+    kernel.line_magics["gnuplot"] = magic
+    kernel.cell_magics["gnuplot"] = magic
 
     @register_line_magic
     def gnuplot(line):
@@ -131,13 +130,13 @@ def _parse_args(args):
     Process the gnuplot line magic arguments
     """
     if len(args) > 1:
-        raise TypeError()
+        raise TypeError
 
     sargs = args[0].split()
     backend = sargs[0]
-    if backend == 'inline':
+    if backend == "inline":
         try:
-            termspec = ' '.join(sargs[1:])
+            termspec = " ".join(sargs[1:])
             terminal = sargs[1]
         except IndexError:
             termspec = None
