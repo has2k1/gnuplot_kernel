@@ -43,6 +43,7 @@ def teardown():
 
 # Normal workflow tests #
 
+
 def test_inline_magic():
     kernel = get_kernel(GnuplotKernel)
 
@@ -285,6 +286,7 @@ def test_do_for_loop():
 
 # magics #
 
+
 def test_cell_magic():
     # To simulate '%load_ext gnuplot_kernel';
     # create a main kernel, a gnuplot kernel and
@@ -318,7 +320,6 @@ def test_cell_magic():
         assert f1.exists()
 
     clear_log_text(kernel)
-
 
 
 def test_reset_cell_magic():

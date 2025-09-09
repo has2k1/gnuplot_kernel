@@ -1,6 +1,7 @@
 """
 Gnuplot Kernel Package
 """
+
 from contextlib import suppress
 from importlib.metadata import PackageNotFoundError
 

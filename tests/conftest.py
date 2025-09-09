@@ -9,7 +9,7 @@ os.environ["JUPYTER_PLATFORM_DIRS"] = "1"
 def ensure_deleted(*paths: str):
     """
     Ensures the given file paths are deleted when the block exits
-    
+
     Parameters
     ----------
     *paths : pathlib.Path

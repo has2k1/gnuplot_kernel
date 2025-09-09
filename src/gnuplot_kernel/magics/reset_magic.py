@@ -2,7 +2,6 @@ from metakernel import Magic
 
 
 class ResetMagic(Magic):
-
     def line_reset(self, *line):
         """
         %reset - Clear any reset

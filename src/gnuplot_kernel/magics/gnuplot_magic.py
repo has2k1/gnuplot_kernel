@@ -44,15 +44,19 @@ class GnuplotMagic(Magic):
         """
         backend, terminal, termspec = _parse_args(args)
         terminal = terminal or "pngcairo"
-        inline_terminals = {"pngcairo": "png",
-                            "png": "png",
-                            "jpeg": "jpg",
-                            "svg": "svg"}
+        inline_terminals = {
+            "pngcairo": "png",
+            "png": "png",
+            "jpeg": "jpg",
+            "svg": "svg",
+        }
         format = inline_terminals.get(terminal, "png")
 
         if backend == "inline" and terminal not in inline_terminals:
-            msg = ("For inline plots, the terminal must be "
-                   "one of pngcairo, jpeg, svg or png")
+            msg = (
+                "For inline plots, the terminal must be "
+                "one of pngcairo, jpeg, svg or png"
+            )
             raise ValueError(msg)
 
         self.kernel.plot_settings["backend"] = backend
@@ -105,6 +109,7 @@ def register_ipython_magics():
     # to some functionality. This connects it to the
     # main kernel.
     from IPython import get_ipython
+
     ip = get_ipython()
     kernel.makeSubkernel(ip.parent)
 

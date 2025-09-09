@@ -24,9 +24,7 @@ PROMPT_RE = re.compile(
     r"\w*>\s*$"
 )
 
-PROMPT_REMOVE_RE = re.compile(
-    r"\w*>\s*"
-)
+PROMPT_REMOVE_RE = re.compile(r"\w*>\s*")
 
 # Data block e.g.
 # $DATA << EOD
@@ -49,10 +47,7 @@ class GnuplotREPLWrapper(REPLWrapper):
     # The prompt after the commands run
     prompt = ""
     _blocks = {
-        "data": {
-            "start_re": START_DATABLOCK_RE,
-            "end_re": END_DATABLOCK_RE
-        }
+        "data": {"start_re": START_DATABLOCK_RE, "end_re": END_DATABLOCK_RE}
     }
     _current_block = NO_BLOCK
 
@@ -61,7 +56,7 @@ class GnuplotREPLWrapper(REPLWrapper):
         Exit the gnuplot process
         """
         try:
-            self._force_prompt(timeout=.01)
+            self._force_prompt(timeout=0.01)
         except GnuplotError:
             return self.child.kill(signal.SIGKILL)
 
@@ -80,8 +75,7 @@ class GnuplotREPLWrapper(REPLWrapper):
         Raises GnuplotError if it cannot deal with it.
         """
         if code.endswith("\\"):
-            raise GnuplotError("Do not execute code that "
-                               "endswith backslash.")
+            raise GnuplotError("Do not execute code that endswith backslash.")
 
         # Do not get stuck in the gnuplot process
         code = code.replace("\\\n", " ")
@@ -94,7 +88,7 @@ class GnuplotREPLWrapper(REPLWrapper):
         """
         Force prompt
         """
-        quick_timeout = .05
+        quick_timeout = 0.05
 
         if timeout < quick_timeout:
             quick_timeout = timeout
@@ -125,8 +119,9 @@ class GnuplotREPLWrapper(REPLWrapper):
         else:
             # Probably long computation going on
             if not patient_prompt():
-                msg = ("gnuplot prompt failed to return in "
-                       "in {} seconds").format(timeout)
+                msg = (
+                    "gnuplot prompt failed to return in in {} seconds"
+                ).format(timeout)
                 raise GnuplotError(msg)
 
     def _end_of_block(self, stmt, end_string):
@@ -207,14 +202,16 @@ class GnuplotREPLWrapper(REPLWrapper):
 
         if self._current_block:
             msg = "Error: {} block not terminated correctly.".format(
-                self._current_block)
+                self._current_block
+            )
             self._current_block = NO_BLOCK
             raise GnuplotError(msg)
 
         return lines
 
-    def run_command(self, code, timeout=-1, stream_handler=None,
-                    stdin_handler=None):
+    def run_command(
+        self, code, timeout=-1, stream_handler=None, stdin_handler=None
+    ):
         """
         Run code
 
@@ -235,8 +232,7 @@ class GnuplotREPLWrapper(REPLWrapper):
             retval = self.child.before.replace(CRLF, "\n")
             self.prompt = self.child.after
             if self.is_error_output(retval):
-                msg = "{}\n{}".format(
-                    line, textwrap.dedent(retval))
+                msg = "{}\n{}".format(line, textwrap.dedent(retval))
                 raise GnuplotError(msg)
 
             # Sometimes block stmts like datablocks make the

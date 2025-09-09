@@ -1,13 +1,14 @@
 """
 Recognising gnuplot statements
 """
+
 import re
 
 # name of the command i.e first token
 CMD_RE = re.compile(
     r"^\s*"
     r"(?P<cmd>"
-    r"\w+"   # The command
+    r"\w+"  # The command
     r")"
     r"\s?"
 )

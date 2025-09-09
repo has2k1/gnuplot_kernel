@@ -21,6 +21,7 @@ class GnuplotKernel(ProcessMetaKernel):
     """
     GnuplotKernel
     """
+
     implementation = "Gnuplot Kernel"
     implementation_version = get_version("gnuplot_kernel")
     language = "gnuplot"
@@ -34,9 +35,13 @@ class GnuplotKernel(ProcessMetaKernel):
         "help_links": MetaKernel.help_links,
     }
     kernel_json = {
-        "argv": [sys.executable,
-                 "-m", "gnuplot_kernel",
-                 "-f", "{connection_file}"],
+        "argv": [
+            sys.executable,
+            "-m",
+            "gnuplot_kernel",
+            "-f",
+            "{connection_file}",
+        ],
         "display_name": "gnuplot",
         "language": "gnuplot",
         "name": "gnuplot",
@@ -53,8 +58,9 @@ class GnuplotKernel(ProcessMetaKernel):
         Print warning if the prompt is not 'gnuplot>'
         """
         if not self.wrapper.prompt.startswith("gnuplot>"):
-            msg = ("Warning: The prompt is currently set "
-                   "to '{}'".format(self.wrapper.prompt))
+            msg = "Warning: The prompt is currently set to '{}'".format(
+                self.wrapper.prompt
+            )
             print(msg)
 
     def do_execute_direct(self, code):
@@ -105,6 +111,7 @@ class GnuplotKernel(ProcessMetaKernel):
 
         This is what powers inline plotting
         """
+
         # "set output sprintf('foobar.%d.png', counter);"
         # "counter=counter+1"
         def set_output_inline(lines):
@@ -129,11 +136,8 @@ class GnuplotKernel(ProcessMetaKernel):
             stmt = STMT(line)
             sm.transition(stmt)
             add_inline_plot = (
-                sm.prev_cur in (
-                    ("none", "plot"),
-                    ("none", "multiplot"),
-                    ("plot", "plot")
-                )
+                sm.prev_cur
+                in (("none", "plot"), ("none", "multiplot"), ("plot", "plot"))
                 and not is_joined_stmt
             )
             if add_inline_plot:
@@ -160,9 +164,7 @@ class GnuplotKernel(ProcessMetaKernel):
         # whodunnit.
         fmt = self.plot_settings["format"]
         filename = Path(
-            f"/tmp/gnuplot-inline-{uuid.uuid1()}"
-            f".{IMG_COUNTER_FMT}"
-            f".{fmt}"
+            f"/tmp/gnuplot-inline-{uuid.uuid1()}.{IMG_COUNTER_FMT}.{fmt}"
         )
         self._image_files.append(filename)
         return filename
@@ -171,10 +173,12 @@ class GnuplotKernel(ProcessMetaKernel):
         """
         Iterate over the image files
         """
-        it = chain(*[
-            sorted(f.parent.glob(f.name.replace(IMG_COUNTER_FMT, "*")))
-            for f in self._image_files
-        ])
+        it = chain(
+            *[
+                sorted(f.parent.glob(f.name.replace(IMG_COUNTER_FMT, "*")))
+                for f in self._image_files
+            ]
+        )
         return it
 
     def display_images(self):
@@ -237,7 +241,7 @@ class GnuplotKernel(ProcessMetaKernel):
         d = dict(
             cmd_or_spawn=command,
             prompt_regex=PROMPT_RE,
-            prompt_change_cmd=None
+            prompt_change_cmd=None,
         )
         wrapper = GnuplotREPLWrapper(**d)
         # No sleeping before sending commands to gnuplot
@@ -278,12 +282,9 @@ class GnuplotKernel(ProcessMetaKernel):
         is innadequate.
         """
         settings = self.plot_settings
-        if ("termspec" not in settings or
-                not settings["termspec"]):
-            settings["termspec"] = ('pngcairo size 385, 256'
-                                    ' font "Arial,10"')
-        if ("format" not in settings or
-                not settings["format"]):
+        if "termspec" not in settings or not settings["termspec"]:
+            settings["termspec"] = 'pngcairo size 385, 256 font "Arial,10"'
+        if "format" not in settings or not settings["format"]:
             settings["format"] = "png"
 
         self.inline_plotting = settings["backend"] == "inline"
@@ -300,6 +301,7 @@ class StateMachine:
     This is used to help us tell when to inject commands (i.e. set output)
     that for inline plotting in the notebook.
     """
+
     states = ["none", "plot", "output", "multiplot", "output_multiplot"]
     previous = "none"
     _current = "none"
@@ -319,8 +321,7 @@ class StateMachine:
 
     def transition(self, stmt):
         lookup = {
-            s: getattr(self, f"transition_from_{s}")
-            for s in self.states
+            s: getattr(self, f"transition_from_{s}") for s in self.states
         }
         _transition = lookup[self.current]
         self.previous = self._current
