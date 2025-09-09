@@ -71,10 +71,7 @@ class GnuplotREPLWrapper(REPLWrapper):
         """
         Return True if text is recognised as error text
         """
-        for pattern in ERROR_RE:
-            if pattern.match(text):
-                return True
-        return False
+        return any(pattern.match(text) for pattern in ERROR_RE)
 
     def validate_input(self, code):
         """
@@ -146,10 +143,9 @@ class GnuplotREPLWrapper(REPLWrapper):
         end_string : str
             Terminal string for the current block.
         """
-        pattern_re = self._blocks[self._current_block]["end_re"]
-        if m := pattern_re.match(stmt):
-            if m.group("end") == end_string:
-                return True
+        pattern = self._blocks[self._current_block]["end_re"]
+        if m := pattern.match(stmt):
+            return m.group("end") == end_string
         return False
 
     def _start_of_block(self, stmt):

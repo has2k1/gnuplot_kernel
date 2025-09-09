@@ -50,11 +50,10 @@ class GnuplotMagic(Magic):
                             "svg": "svg"}
         format = inline_terminals.get(terminal, "png")
 
-        if backend == "inline":
-            if terminal not in inline_terminals:
-                msg = ("For inline plots, the terminal must be "
-                       "one of pngcairo, jpeg, svg or png")
-                raise ValueError(msg)
+        if backend == "inline" and terminal not in inline_terminals:
+            msg = ("For inline plots, the terminal must be "
+                   "one of pngcairo, jpeg, svg or png")
+            raise ValueError(msg)
 
         self.kernel.plot_settings["backend"] = backend
         self.kernel.plot_settings["termspec"] = termspec

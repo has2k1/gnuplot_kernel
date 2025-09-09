@@ -6,7 +6,7 @@ from metakernel.tests.utils import clear_log_text, get_kernel, get_log_text
 from gnuplot_kernel import GnuplotKernel
 from gnuplot_kernel.magics import GnuplotMagic
 
-from .conftest import remove_files
+from .conftest import ensure_deleted
 
 # Note: Empty lines after indented triple quoted may
 # lead to empty statements which could obscure the
@@ -23,10 +23,7 @@ def get_kernel(klass=None):
     """
     Create & add to registry of live kernels
     """
-    if klass:
-        kernel = _get_kernel(klass)
-    else:
-        kernel = _get_kernel()
+    kernel = _get_kernel(klass) if klass else _get_kernel()
     KERNELS.add(kernel)
     return kernel
 
@@ -69,36 +66,37 @@ def test_file_plots():
     kernel.call_magic("%gnuplot pngcairo size 560, 420")
 
     # With a non-inline terminal plot gets created
-    code = """
-    set output 'sine.png'
-    plot sin(x)
-    """
-    kernel.do_execute(code)
-    assert Path("sine.png").exists()
+    with ensure_deleted("sine.png") as f1:
+        code = f"""
+        set output '{f1}'
+        plot sin(x)
+        """
+        kernel.do_execute(code)
+        assert f1.exists()
+
     clear_log_text(kernel)
 
     # Multiple line statement
-    code = """
-    set output 'sine-cosine.png'
-    plot sin(x),\
-         cos(x)
-    """
-    kernel.do_execute(code)
-    assert Path("sine-cosine.png").exists()
+    with ensure_deleted("sine-cosine.png") as f1:
+        code = f"""
+        set output '{f1}'
+        plot sin(x),\
+             cos(x)
+        """
+        kernel.do_execute(code)
+        assert f1.exists()
 
     # Multiple line statement
-    code = """
-    set output 'tan.png'
-    plot tan(x)
-    set output 'tan2.png'
-    replot
-    """
-    kernel.do_execute(code)
-    assert Path("tan.png").exists()
-    assert Path("tan2.png").exists()
-
-    remove_files("sine.png", "sine-cosine.png")
-    remove_files("tan.png", "tan2.png")
+    with ensure_deleted("tan.png", "tan2.png") as (f1, f2):
+        code = f"""
+        set output '{f1}'
+        plot tan(x)
+        set output '{f2}'
+        replot
+        """
+        kernel.do_execute(code)
+        assert f1.exists()
+        assert f2.exists()
 
 
 def test_inline_plots():
@@ -167,18 +165,18 @@ def test_multiplot():
     assert text.count("Display Data") == 1
 
     # With output
-    code = """
-    set terminal pncairo
-    set output 'multiplot-sin-cos.png'
-    set multiplot layout 2, 1
-    plot sin(x)
-    plot cos(x)
-    unset multiplot
-    unset output
-    """
-    kernel.do_execute(code)
-    assert Path("multiplot-sin-cos.png").exists()
-    remove_files("multiplot-sin-cos.png")
+    with ensure_deleted("multiplot-sin-cos.png") as f1:
+        code = f"""
+        set terminal pncairo
+        set output '{f1}'
+        set multiplot layout 2, 1
+        plot sin(x)
+        plot cos(x)
+        unset multiplot
+        unset output
+        """
+        kernel.do_execute(code)
+        assert f1.exists()
 
 
 def test_help():
@@ -310,35 +308,35 @@ def test_cell_magic():
 
     # file output
     kernel.call_magic("%gnuplot pngcairo size 560,420")
-    code = """%%gnuplot
-    set output 'cosine.png'
-    plot cos(x)
-    """
-    kernel.do_execute(code)
-    assert Path("cosine.png").exists()
+
+    with ensure_deleted("cosine.png") as f1:
+        code = f"""%%gnuplot
+        set output '{f1}'
+        plot cos(x)
+        """
+        kernel.do_execute(code)
+        assert f1.exists()
+
     clear_log_text(kernel)
 
-    remove_files("cosine.png")
 
 
 def test_reset_cell_magic():
     kernel = get_kernel(GnuplotKernel)
 
     # Use reset statements that have testable effect
-    code = """%%reset
-    set output 'sine+cosine.png'
-    plot sin(x) + cos(x)
-    """
-    kernel.call_magic(code)
-    assert not Path("sine+cosine.png").exists()
+    with ensure_deleted("sine+cosine.png") as f1:
+        code = f"""%%reset
+        set output '{f1}'
+        plot sin(x) + cos(x)
+        """
+        kernel.call_magic(code)
 
-    code = """
-    unset key
-    """
-    kernel.do_execute(code)
-    assert Path("sine+cosine.png").exists()
-
-    remove_files("sine+cosine.png")
+        code = """
+        unset key
+        """
+        kernel.do_execute(code)
+        assert f1.exists()
 
 
 def test_reset_line_magic():
@@ -358,28 +356,9 @@ def test_reset_line_magic():
     unset key
     """
     kernel.do_execute(code)
-    assert not Path("sine+sine.png").exists()
+    assert not Path("sine+sine").exists()
 
     # Bad inline backend
     # metakernel messes this exception!!
     # with assert_raises(ValueError):
     #     kernel.call_magic('%gnuplot inline qt')
-
-
-# fixture tests #
-def test_remove_files():
-    """
-    This test create a file. Next test tests that it
-    is deleted
-    """
-    filename = "antigravit.txt"
-    # Create file
-    # make sure it exis
-    with open(filename, "w"):
-        pass
-
-    assert Path(filename).exists()
-
-    remove_files(filename)
-
-    assert not Path(filename).exists()

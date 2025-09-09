@@ -1,3 +1,4 @@
+import contextlib
 import sys
 import uuid
 from itertools import chain
@@ -182,10 +183,7 @@ class GnuplotKernel(ProcessMetaKernel):
         """
         settings = self.plot_settings
         if self.inline_plotting:
-            if settings["format"] == "svg":
-                _Image = SVG
-            else:
-                _Image = Image
+            _Image = SVG if settings["format"] == "svg" else Image
 
         for filename in self.iter_image_files():
             try:
@@ -213,10 +211,8 @@ class GnuplotKernel(ProcessMetaKernel):
         # After display_images(), the real images are
         # no longer required.
         for filename in self.iter_image_files():
-            try:
+            with contextlib.suppress(FileNotFoundError):
                 filename.unlink()
-            except FileNotFoundError:
-                pass
 
         self._image_files = []
 

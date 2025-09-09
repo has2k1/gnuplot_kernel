@@ -1,6 +1,7 @@
 """
 Gnuplot Kernel Package
 """
+from contextlib import suppress
 from importlib.metadata import PackageNotFoundError
 
 from .kernel import GnuplotKernel
@@ -10,11 +11,8 @@ from .utils import get_version
 __all__ = ["GnuplotKernel"]
 
 
-try:
+with suppress(PackageNotFoundError):
     __version__ = get_version("gnuplot_kernel")
-except PackageNotFoundError:
-    # package is not installed
-    pass
 
 
 def load_ipython_extension(ipython):
