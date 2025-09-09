@@ -65,6 +65,9 @@ lint-fix:
 
 fix: format-fix lint-fix
 
+typecheck:
+	$(UVRUN) pyright
+
 test: clean-test
 	$(UVRUN) pytest
 

@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import contextlib
 import sys
 import uuid
 from itertools import chain
 from pathlib import Path
+from typing import cast
 
 from IPython.display import SVG, Image
 from metakernel import MetaKernel, ProcessMetaKernel, pexpect
@@ -25,8 +28,8 @@ class GnuplotKernel(ProcessMetaKernel):
     implementation = "Gnuplot Kernel"
     implementation_version = get_version("gnuplot_kernel")
     language = "gnuplot"
-    language_version = "5.0"
-    banner = "Gnuplot Kernel"
+    _banner = "Gnuplot Kernel"
+    language_version = "5.0"  # pyright: ignore[reportAssignmentType,reportIncompatibleMethodOverride]
     language_info = {
         "mimetype": "text/x-gnuplot",
         "name": "gnuplot",
@@ -50,20 +53,20 @@ class GnuplotKernel(ProcessMetaKernel):
     inline_plotting = True
     reset_code = ""
     _first = True
-    _image_files = []
+    _image_files: list[Path] = []
     _error = False
+
+    wrapper: GnuplotREPLWrapper
 
     def bad_prompt_warning(self):
         """
         Print warning if the prompt is not 'gnuplot>'
         """
-        if not self.wrapper.prompt.startswith("gnuplot>"):
-            msg = "Warning: The prompt is currently set to '{}'".format(
-                self.wrapper.prompt
-            )
-            print(msg)
+        prompt = cast("str", self.wrapper.prompt).strip()
+        if not prompt.endswith("gnuplot>"):
+            print(f"Warning: The prompt is currently set to '{prompt}'")
 
-    def do_execute_direct(self, code):
+    def do_execute_direct(self, code, silent=False):
         # We wrap the real function so that gnuplot_kernel can
         # give a message when an exception occurs. Without
         # this, an exception happens silently
@@ -73,7 +76,7 @@ class GnuplotKernel(ProcessMetaKernel):
             print(f"Error: {err}")
             raise err
 
-    def _do_execute_direct(self, code):
+    def _do_execute_direct(self, code: str) -> TextOutput | None:
         """
         Execute gnuplot code
         """
@@ -105,7 +108,7 @@ class GnuplotKernel(ProcessMetaKernel):
         # No empty strings
         return result if (result and result.output) else None
 
-    def add_inline_image_statements(self, code):
+    def add_inline_image_statements(self, code: str) -> str:
         """
         Add 'set output ...' before every plotting statement
 
@@ -188,6 +191,8 @@ class GnuplotKernel(ProcessMetaKernel):
         settings = self.plot_settings
         if self.inline_plotting:
             _Image = SVG if settings["format"] == "svg" else Image
+        else:
+            return
 
         for filename in self.iter_image_files():
             try:
@@ -238,12 +243,11 @@ class GnuplotKernel(ProcessMetaKernel):
         else:
             command = program
 
-        d = dict(
+        wrapper = GnuplotREPLWrapper(
             cmd_or_spawn=command,
             prompt_regex=PROMPT_RE,
             prompt_change_cmd=None,
         )
-        wrapper = GnuplotREPLWrapper(**d)
         # No sleeping before sending commands to gnuplot
         wrapper.child.delaybeforesend = 0
         return wrapper
@@ -258,11 +262,8 @@ class GnuplotKernel(ProcessMetaKernel):
     def get_kernel_help_on(self, info, level=0, none_on_fail=False):
         obj = info.get("help_obj", "")
         if not obj or len(obj.split()) > 1:
-            if none_on_fail:
-                return None
-            else:
-                return ""
-        res = self.do_execute_direct("help %s" % obj)
+            return None if none_on_fail else "" 
+        res = cast("TextOutput", self.do_execute_direct("help %s" % obj))
         text = PROMPT_REMOVE_RE.sub("", res.output)
         self.bad_prompt_warning()
         return text

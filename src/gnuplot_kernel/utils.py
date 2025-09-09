@@ -5,7 +5,7 @@ Useful functions
 from importlib.metadata import version
 
 
-def get_version(package):
+def get_version(package: str) -> str:
     """
     Return the package version
 

@@ -1,6 +1,7 @@
 import re
 import signal
 import textwrap
+from typing import cast
 
 from metakernel import REPLWrapper
 from metakernel.pexpect import TIMEOUT
@@ -84,7 +85,7 @@ class GnuplotREPLWrapper(REPLWrapper):
     def send(self, cmd):
         self.child.send(cmd + "\r")
 
-    def _force_prompt(self, timeout=30, n=4):
+    def _force_prompt(self, timeout: float=30, n=4):
         """
         Force prompt
         """
@@ -109,7 +110,7 @@ class GnuplotREPLWrapper(REPLWrapper):
 
         # Eagerly try to get a prompt quickly,
         # If that fails wait a while
-        for i in range(n):
+        for _ in range(n):
             if quick_prompt():
                 break
 
@@ -209,8 +210,13 @@ class GnuplotREPLWrapper(REPLWrapper):
 
         return lines
 
-    def run_command(
-        self, code, timeout=-1, stream_handler=None, stdin_handler=None
+    def run_command(  # pyright: ignore[reportIncompatibleMethodOverride]
+        self,
+        command,
+        timeout=-1,
+        stream_handler=None,
+        line_handler=None,
+        stdin_handler=None,
     ):
         """
         Run code
@@ -218,10 +224,10 @@ class GnuplotREPLWrapper(REPLWrapper):
         This overrides the baseclass method to allow for
         input validation and error handling.
         """
-        code = self.validate_input(code)
+        command = self.validate_input(command)
 
         # Split up multiline commands and feed them in bit-by-bit
-        stmts = self._splitlines(code)
+        stmts = self._splitlines(command)
         output_lines = []
         for line in stmts:
             self.send(line)
@@ -229,7 +235,7 @@ class GnuplotREPLWrapper(REPLWrapper):
 
             # Removing any crlfs makes subsequent
             # processing cleaner
-            retval = self.child.before.replace(CRLF, "\n")
+            retval = cast("str", self.child.before).replace(CRLF, "\n")
             self.prompt = self.child.after
             if self.is_error_output(retval):
                 msg = "{}\n{}".format(line, textwrap.dedent(retval))
