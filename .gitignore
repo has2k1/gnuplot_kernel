@@ -20,3 +20,6 @@ coverage.xml
 # other
 .cache
 examples/.ipynb_checkpoints
+
+# uv
+uv.lock

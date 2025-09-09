@@ -1,4 +1,44 @@
-# Reference https://github.com/pydata/xarray/blob/main/pyproject.toml
+[project]
+name = "gnuplot_kernel"
+description = "A gnuplot kernel for Jupyter"
+license = {file = "LICENSE"}
+authors = [
+  {name = "Hassan Kibirige", email = "has2k1@gmail.com"},
+]
+dynamic = ["version"]
+readme = "README.md"
+classifiers = [
+    "Framework :: IPython",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Topic :: System :: Shells",
+]
+
+dependencies = [
+    "metakernel>=0.30.0",
+    "jupyter>=1.1.1",
+]
+
+requires-python = ">=3.10"
+
+[project.optional-dependencies]
+
+dev = [
+    "ruff",
+    "pytest-cov>=4.0.0",
+    "coveralls",
+    "matplotlib",
+]
+
+[project.urls]
+homepage = "https://github.com/has2k1/gnuplot_kernel"
+repository = "https://github.com/has2k1/gnuplot_kernel"
+ci = "https://github.com/has2k1/gnuplot_kernel/actions"
+
+########## Build System ##########
 [build-system]
 requires = [
     "setuptools>=59",
@@ -7,34 +47,85 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+########## Tool - Setuptools ##########
+# https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
+
 [tool.setuptools_scm]
 fallback_version = "999"
-version_scheme = 'post-release'
+version_scheme = "post-release"
 
-# pytest
+
+########## Tool - Pytest ##########
 [tool.pytest.ini_options]
 testpaths = [
-    "gnuplot_kernel/tests"
+    "tests"
 ]
-addopts = "--pyargs --cov --cov-report=xml --import-mode=importlib"
+addopts = "--pyargs --cov=src/gnuplot_kernel --cov-report=xml --import-mode=importlib"
 
+########## Tool - Coverage ##########
 # Coverage.py
 [tool.coverage.run]
 branch = true
-source = ["gnuplot_kernel"]
-include = ["gnuplot_kernel/*"]
+source = ["src"]
+include = [
+   "src/gnuplot_kernel/*"
+]
 omit = [
-    "setup.py",
-    "gnuplot_kernel/__main__.py"
+    "src/gnuplot_kernel/__main__.py"
 ]
 disable_warnings = ["include-ignored"]
 
 [tool.coverage.report]
 exclude_lines = [
-   "pragma: no cover",
-   "def __repr__",
-   "if __name__ == .__main__.:",
-   "def register_ipython_magics",
-   "def load_ipython_extension"
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    "def register_ipython_magics",
+    "def load_ipython_extension"
 ]
 precision = 1
+
+########## Tool - Ruff ##########
+[tool.ruff]
+line-length = 79
+
+[tool.ruff.lint]
+select = [
+   "E",
+   "F",
+   "I",
+   "TCH",
+   "Q",
+   "PIE",
+   "PTH",
+   "PD",
+   "PYI",
+   "RSE",
+   "SIM",
+   "B904",
+   "FLY",
+   "NPY",
+   "PERF102"
+]
+ignore = [
+    "E741",  # Ambiguous l
+    "E743",  # Ambiguous I
+    # .reset_index, .rename, .replace
+    # This will remain the correct choice until we enable copy-on-write
+    "PD002",
+    # Use specific rule codes when ignoring type issues and
+    # not # type: ignore
+    "PGH003"
+]
+
+# Allow autofix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    "**/__pycache__",
+]
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
