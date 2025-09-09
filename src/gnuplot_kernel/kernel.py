@@ -262,7 +262,7 @@ class GnuplotKernel(ProcessMetaKernel):
     def get_kernel_help_on(self, info, level=0, none_on_fail=False):
         obj = info.get("help_obj", "")
         if not obj or len(obj.split()) > 1:
-            return None if none_on_fail else "" 
+            return None if none_on_fail else ""
         res = cast("TextOutput", self.do_execute_direct("help %s" % obj))
         text = PROMPT_REMOVE_RE.sub("", res.output)
         self.bad_prompt_warning()

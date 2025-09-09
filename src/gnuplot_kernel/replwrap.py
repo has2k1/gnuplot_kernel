@@ -85,7 +85,7 @@ class GnuplotREPLWrapper(REPLWrapper):
     def send(self, cmd):
         self.child.send(cmd + "\r")
 
-    def _force_prompt(self, timeout: float=30, n=4):
+    def _force_prompt(self, timeout: float = 30, n=4):
         """
         Force prompt
         """
