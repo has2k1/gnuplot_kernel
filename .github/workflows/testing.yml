@@ -1,6 +1,13 @@
 name: build
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - '*'
+    tags-ignore:
+      - 'v[0-9]*'
+  pull_request:
+  workflow_call:
 
 jobs:
   # Unittests
@@ -13,44 +20,44 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.8", "3.10"]
+        include:
+          - python-version: "3.10"
+            resolution: "lowest-direct"
+          - python-version: 3.13
+            resolution: "highest"
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v2
+      - name: Install a specific version of uv
+        uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install Packages
-        shell: bash -l {0}
         run: |
           sudo apt-get install gnuplot
-          pip install -e ".[test]"
-          pip install coveralls
+          # Install as an editable so that the coverage path
+          # is predicable
+          uv run uv pip install --resolution=${{ matrix.resolution }} -e ".[dev]"
 
       - name: Environment Information
-        shell: bash -l {0}
         run: |
           gnuplot --version
-          pip list
+          uv pip list
 
       - name: Run Tests
-        shell: bash -l {0}
         run: |
-          coverage erase
           make test
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true
           name: "py${{ matrix.python-version }}"
 
-  # Linting
-  lint:
+  lint-and-format:
     runs-on: ubuntu-latest
 
     # We want to run on external PRs, but not on our own internal PRs as they'll be run
@@ -59,24 +66,53 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.10"]
+        python-version: [3.13]
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v2
+      - name: Install a specific version of uv
+        uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install Packages
-        shell: bash -l {0}
-        run: pip install flake8
+        run: uv run uv pip install ruff
 
       - name: Environment Information
-        shell: bash -l {0}
-        run: pip list
+        run: uv pip list
+
+      - name: Check lint with Ruff
+        run: make lint
+
+      - name: Check format with Ruff
+        run: make format
+
+  typecheck:
+    runs-on: ubuntu-latest
+
+    # We want to run on external PRs, but not on our own internal PRs as they'll be run
+    # by the push to the branch.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+
+    strategy:
+      matrix:
+        python-version: [3.13]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install a specific version of uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Packages
+        run: uv run uv pip install ".[dev]"
+
+      - name: Environment Information
+        run: uv pip list
 
       - name: Run Tests
-        shell: bash -l {0}
-        run: make lint
+        run: make typecheck
