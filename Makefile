@@ -1,6 +1,27 @@
 .PHONY: clean-pyc clean-build docs clean
 BROWSER := python -mwebbrowser
 
+# NOTE: Take care not to use tabs in any programming flow outside the
+# make target
+
+# Use uv (if it is installed) to run all python related commands,
+# and prefere the active environment over .venv in a parent folder
+ifeq ($(OS),Windows_NT)
+  HAS_UV := $(if $(shell where uv 2>NUL),true,false)
+else
+  HAS_UV := $(if $(shell command -v uv 2>/dev/null),true,false)
+endif
+
+ifeq ($(HAS_UV),true)
+  PYTHON ?= uv run --active python
+  PIP ?= uv pip
+  UVRUN ?= uv run --active
+else
+  PYTHON ?= python
+  PIP ?= pip
+  UVRUN ?=
+endif
+
 help:
 	@echo "clean - remove all build, test, coverage and Python artifacts"
 	@echo "clean-build - remove build artifacts"
@@ -19,43 +40,54 @@ clean: clean-build clean-pyc clean-test
 clean-build:
 	rm -fr build/
 	rm -fr dist/
-	rm -fr .eggs/
 	find . -name '*.egg-info' -exec rm -fr {} +
-	find . -name '*.egg' -exec rm -f {} +
 
-clean-pyc:
-	find . -name '*.pyc' -exec rm -f {} +
-	find . -name '*.pyo' -exec rm -f {} +
-	find . -name '*~' -exec rm -f {} +
+clean-cache:
 	find . -name '__pycache__' -exec rm -fr {} +
 
 clean-test:
+	$(UVRUN) coverage erase
+	rm -f coverage.xml
 	rm -f .coverage
 	rm -fr htmlcov/
 
+format:
+	$(UVRUN) ruff format --check .
+
+format-fix:
+	$(UVRUN) ruff format .
+
 lint:
-	flake8 gnuplot_kernel
+	$(UVRUN) ruff check .
+
+lint-fix:
+	$(UVRUN) ruff check --fix .
+
+fix: format-fix lint-fix
 
 test: clean-test
-	pytest
+	$(UVRUN) pytest
 
 coverage:
-	coverage report -m
-	coverage html
+	$(UVRUN) coverage report -m
+	$(UVRUN) coverage html
 	$(BROWSER) htmlcov/index.html
 
-dist: clean
-	python setup.py sdist bdist_wheel
+dist: clean-build
+	$(PYTHON) -m build
 	ls -l dist
 
-release: dist
-	twine upload dist/*
+release-major:
+	@$(PYTHON) ./tools/release-checklist.py major
 
-release-test: dist
-	twine upload -r pypitest dist/*
+release-minor:
+	@$(PYTHON) ./tools/release-checklist.py minor
+
+release-patch:
+	@$(PYTHON) ./tools/release-checklist.py patch
 
 install: clean
-	python setup.py install
+	$(PIP) install ".[extra]"
 
-develop: clean-pyc
-	python setup.py develop
+develop: clean-cache
+	$(PIP) install -e ".[dev]"
