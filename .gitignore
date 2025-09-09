@@ -21,5 +21,8 @@ coverage.xml
 .cache
 examples/.ipynb_checkpoints
 
+# Catch all unnamed notebook files
+**/Untitled*.ipynb
+
 # uv
 uv.lock
