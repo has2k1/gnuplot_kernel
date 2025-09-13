@@ -35,7 +35,6 @@ dev = [
 
 test = [
     "pytest-cov>=4.0.0",
-    "coveralls>=4.0.1",
 ]
 
 

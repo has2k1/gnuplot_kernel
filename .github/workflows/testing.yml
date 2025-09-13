@@ -51,11 +51,14 @@ jobs:
         run: |
           make test
 
+      # https://app.codecov.io/github/has2k1/gnuplot-kernel/settings
+      # https://github.com/has2k1/gnuplot-kernel/settings/secrets/actions
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true
           name: "py${{ matrix.python-version }}"
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   lint-and-format:
     runs-on: ubuntu-latest
