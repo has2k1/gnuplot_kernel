@@ -8,6 +8,11 @@ on:
       - 'v[0-9]*'
   pull_request:
   workflow_call:
+    inputs:
+      skip_codecov:
+        type: boolean
+        required: false
+        default: false
 
 jobs:
   # Unittests
@@ -54,6 +59,7 @@ jobs:
       # https://app.codecov.io/github/has2k1/gnuplot-kernel/settings
       # https://github.com/has2k1/gnuplot-kernel/settings/secrets/actions
       - name: Upload coverage to Codecov
+        if: ${{ !inputs.skip_codecov }}
         uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true
