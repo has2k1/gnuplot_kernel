@@ -90,7 +90,7 @@ release-patch:
 	@$(PYTHON) ./tools/release-checklist.py patch
 
 install: clean
-	$(PIP) install ".[extra]"
+	$(PIP) install .
 
 develop: clean-cache
 	$(PIP) install -e ".[dev]"
