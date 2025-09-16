@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/pypi/v/gnuplot_kernel.svg)](https://pypi.python.org/pypi/gnuplot_kernel)
 [![License](https://img.shields.io/pypi/l/gnuplot_kernel.svg)](https://pypi.python.org/pypi/gnuplot_kernel)
-[![Build Status](https://github.com/has2k1/plotnine/workflows/build/badge.svg?branch=main)](https://github.com/has2k1/plotnine/actions?query=branch%3Amain+workflow%3A%22build%22)
+[![Build Status](https://github.com/has2k1/gnuplot_kernel/workflows/build/badge.svg?branch=main)](https://github.com/has2k1/gnuplot_kernel/actions?query=branch%3Amain+workflow%3A%22build%22)
 [![Coverage](https://coveralls.io/repos/github/has2k1/gnuplot_kernel/badge.svg?branch=main)](https://coveralls.io/github/has2k1/gnuplot_kernel?branch=main)
 
 `gnuplot_kernel` has been developed for use specifically with `Jupyter Notebook`.

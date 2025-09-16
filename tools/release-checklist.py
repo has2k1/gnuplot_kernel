@@ -10,7 +10,7 @@ from typing import Literal, Optional, Sequence, TypeAlias
 
 TPL_FILENAME = "release-checklist-tpl.md"
 THIS_DIR = Path(__file__).parent
-NEW_ISSUE = "https://github.com/has2k1/plotnine/issues/new"
+NEW_ISSUE = "https://github.com/has2k1/gnuplot_kernel/issues/new"
 
 VersionPart: TypeAlias = Literal[
     "major",
@@ -53,7 +53,9 @@ def copy_to_clipboard(s: str):
     platform_cmds = {"Darwin": "pbcopy", "Linux": "xclip", "Windows": "clip"}
 
     try:
-        from pandas.io import clipboard
+        from pandas.io import (  # pyright: ignore[reportMissingImports]
+            clipboard,
+        )
     except ImportError:
         try:
             cmd = platform_cmds[plat]
@@ -62,7 +64,7 @@ def copy_to_clipboard(s: str):
             raise RuntimeError(msg) from err
         run(cmd, input=s)
     else:
-        clipboard.copy(s)  # type: ignore
+        clipboard.copy(s)
 
 
 def get_previous_version(s: Optional[str] = None) -> str:
@@ -139,7 +141,7 @@ def verbose(prev_version, next_version):
     """
     from textwrap import dedent
 
-    from term import T0 as T  # type: ignore
+    from term import T0 as T
 
     s = f"""
     Previous Version: {T(prev_version, "lightblue", effect="strikethrough")}
