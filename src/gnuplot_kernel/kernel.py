@@ -57,14 +57,19 @@ class GnuplotKernel(ProcessMetaKernel):
     _error = False
 
     wrapper: GnuplotREPLWrapper
+    _bad_prompts: set = set()
 
-    def bad_prompt_warning(self):
+    def check_prompt(self):
         """
-        Print warning if the prompt is not 'gnuplot>'
+        Print warning if the prompt looks bad
+
+        A bad prompt is one that does not contain the string 'gnuplot>'.
+        The warning is printed once per bad prompt.
         """
-        prompt = cast("str", self.wrapper.prompt).strip()
-        if not prompt.endswith("gnuplot>"):
+        prompt = cast("str", self.wrapper.prompt)
+        if "gnuplot>" not in prompt and prompt not in self._bad_prompts:
             print(f"Warning: The prompt is currently set to '{prompt}'")
+            self._bad_prompts.add(prompt)
 
     def do_execute_direct(self, code, silent=False):
         # We wrap the real function so that gnuplot_kernel can
@@ -103,7 +108,7 @@ class GnuplotKernel(ProcessMetaKernel):
                 self.display_images()
             self.delete_image_files()
 
-        self.bad_prompt_warning()
+        self.check_prompt()
 
         # No empty strings
         return result if (result and result.output) else None
@@ -265,7 +270,7 @@ class GnuplotKernel(ProcessMetaKernel):
             return None if none_on_fail else ""
         res = cast("TextOutput", self.do_execute_direct("help %s" % obj))
         text = PROMPT_REMOVE_RE.sub("", res.output)
-        self.bad_prompt_warning()
+        self.check_prompt()
         return text
 
     def reset_image_counter(self):
